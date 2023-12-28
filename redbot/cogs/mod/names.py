@@ -18,7 +18,7 @@ _ = i18n.Translator("Mod", __file__)
 
 class ModInfo(MixinMeta):
     """
-    Commands regarding names, userinfo, etc.
+    Commands regarding names, usrinfo, etc.
     """
 
     async def get_names(self, member: discord.Member) -> Tuple[List[str], List[str], List[str]]:
@@ -172,7 +172,7 @@ class ModInfo(MixinMeta):
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(embed_links=True)
-    async def userinfo(self, ctx, *, member: discord.Member = None):
+    async def usrinfo(self, ctx, *, member: discord.Member = None):
         """Show information about a member.
 
         This includes fields for status, discord join date, server

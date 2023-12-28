@@ -327,7 +327,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                     del muted_users[str(data["member"])]
             del self._server_mutes[guild.id][data["member"]]
             return
-        success = await self.unmute_user(guild, author, member, _("Automatic unmute"))
+        success = await self.unmute_user(guild, author, member, _("自动解除禁言"))
         async with self.config.guild(guild).muted_users() as muted_users:
             if str(member.id) in muted_users:
                 del muted_users[str(member.id)]
@@ -339,11 +339,11 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                 "sunmute",
                 member,
                 author,
-                _("Automatic unmute"),
+                _("自动解除禁言"),
                 until=None,
             )
             await self._send_dm_notification(
-                member, author, guild, _("Server unmute"), _("Automatic unmute")
+                member, author, guild, _("Server unmute"), _("自动解除禁言")
             )
         else:
             chan_id = await self.config.guild(guild).notification_channel()
@@ -434,7 +434,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                 continue
             _member, channel, reason = result
             unmuted_channels.remove(channel)
-        modlog_reason = _("Automatic unmute")
+        modlog_reason = _("自动解除禁言")
 
         channel_list = humanize_list([c.mention for c in unmuted_channels if c is not None])
         if channel_list:
@@ -451,7 +451,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
             until=None,
         )
         await self._send_dm_notification(
-            member, author, guild, _("Server unmute"), _("Automatic unmute")
+            member, author, guild, _("Server unmute"), _("自动解除禁言")
         )
         self._channel_mute_events[guild.id].set()
         if any(results):
@@ -505,7 +505,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                 del self._channel_mutes[channel.id][data["member"]]
             return None
         success = await self.channel_unmute_user(
-            channel.guild, channel, author, member, _("Automatic unmute")
+            channel.guild, channel, author, member, _("自动解除禁言")
         )
         async with self.config.channel(channel).muted_users() as muted_users:
             if str(member.id) in muted_users:
@@ -525,12 +525,12 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                     unmute_type,
                     member,
                     channel.guild.me,
-                    _("Automatic unmute"),
+                    _("自动解除禁言"),
                     until=None,
                     channel=channel,
                 )
                 await self._send_dm_notification(
-                    member, author, channel.guild, notification_title, _("Automatic unmute")
+                    member, author, channel.guild, notification_title, _("自动解除禁言")
                 )
             return None
         else:
@@ -1212,12 +1212,12 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
             until = None
             if duration:
                 until = datetime.now(timezone.utc) + duration
-                time = _(" for {duration}").format(duration=humanize_timedelta(timedelta=duration))
+                time = _(" {duration}").format(duration=humanize_timedelta(timedelta=duration))
             else:
                 default_duration = await self.config.guild(ctx.guild).default_time()
                 if default_duration:
                     until = datetime.now(timezone.utc) + timedelta(seconds=default_duration)
-                    time = _(" for {duration}").format(
+                    time = _(" {duration}").format(
                         duration=humanize_timedelta(timedelta=timedelta(seconds=default_duration))
                     )
             author = ctx.message.author
@@ -1251,7 +1251,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
         if success_list:
             if ctx.guild.id not in self._server_mutes:
                 self._server_mutes[ctx.guild.id] = {}
-            msg = _("{users} has been muted in this server{time}.")
+            msg = _("{users} 被禁言{time}.")
             if len(success_list) > 1:
                 msg = _("{users} have been muted in this server{time}.")
             await ctx.send(
@@ -1360,12 +1360,12 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
             until = None
             if duration:
                 until = datetime.now(timezone.utc) + duration
-                time = _(" for {duration}").format(duration=humanize_timedelta(timedelta=duration))
+                time = _(" {duration}").format(duration=humanize_timedelta(timedelta=duration))
             else:
                 default_duration = await self.config.guild(ctx.guild).default_time()
                 if default_duration:
                     until = datetime.now(timezone.utc) + timedelta(seconds=default_duration)
-                    time = _(" for {duration}").format(
+                    time = _(" {duration}").format(
                         duration=humanize_timedelta(timedelta=timedelta(seconds=default_duration))
                     )
             author = ctx.message.author

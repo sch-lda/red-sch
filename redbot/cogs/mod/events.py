@@ -2,11 +2,14 @@ import logging
 from datetime import timezone
 from collections import defaultdict, deque
 from typing import List, Optional
+from AAA3A_utils import Cog, CogsUtils, Menu
+from redbot.core.utils.mod import get_audit_reason
 
 import discord
 from redbot.core import i18n, modlog, commands
 from redbot.core.utils.mod import is_mod_or_superior
 from .abc import MixinMeta
+from .utils import is_allowed_by_hierarchy
 
 _ = i18n.Translator("Mod", __file__)
 log = logging.getLogger("red.mod")
@@ -17,26 +20,127 @@ class Events(MixinMeta):
     This is a mixin for the core mod cog
     Has a bunch of things split off to here.
     """
+    async def repeattosoftban(self, guild, author, message, channel, member, reason):
+        guild = guild
+        author = author
+        message = message
+
+        if author == member:
+            log.info("cannot selfban")
+            return
+
+        audit_reason = get_audit_reason(author, reason, shorten=True)
+
+        try:  # We don't want blocked DMs preventing us from banning
+            msg = await member.send(
+                _(
+                    "你已被踢出,最近一天的消息已被删除."
+                    "这通常是因为你的账号在群组内发送广告被管理员判定为广告机器人账号.\n"
+                    "请检查账号状态并修改密码以排除盗号隐患.之后你可以通过此链接重新加入server. https://discord.gg/7GuNzajfhD"
+                )
+            )
+        except discord.HTTPException:
+            msg = None
+        try:
+            await guild.ban(member, reason=audit_reason, delete_message_seconds=86400)
+        except discord.errors.Forbidden:
+            log.info("My role is not high enough to softban that user.")
+            if msg is not None:
+                await msg.delete()
+            return
+        except discord.HTTPException:
+            log.exception(
+                "%s (%s) attempted to softban %s (%s), but an error occurred trying to ban them.",
+                author,
+                author.id,
+                member,
+                member.id,
+            )
+            return
+        try:
+            await guild.unban(member)
+        except discord.HTTPException:
+            log.exception(
+                "%s (%s) attempted to softban %s (%s),"
+                " but an error occurred trying to unban them.",
+                author,
+                author.id,
+                member,
+                member.id,
+            )
+            return
+        else:
+            log.info(
+                "%s (%s) softbanned %s (%s), deleting 1 day worth of messages.",
+                author,
+                author.id,
+                member,
+                member.id,
+            )
+            await modlog.create_case(
+                self.bot,
+                guild,
+                message.created_at,
+                "softban",
+                member,
+                author,
+                reason,
+                until=None,
+                channel=None,
+            )
+            await channel.send(_("清理了一个广告机"))
 
     async def check_duplicates(self, message):
+        
         guild = message.guild
         author = message.author
-
+        channel=message.channel
+        member=author.id
         guild_cache = self.cache.get(guild.id, None)
         if guild_cache is None:
             repeats = await self.config.guild(guild).delete_repeats()
             if repeats == -1:
+                log.info(-1)
                 return False
-            guild_cache = self.cache[guild.id] = defaultdict(lambda: deque(maxlen=repeats))
-
+            guild_cache = self.cache[guild.id] = defaultdict(lambda: deque(maxlen=6))
+        
         if not message.content:
+            return False
+            # Off-topic # 频道公告 # mod-only # 规则
+        if channel.id == 976462395427921940 or channel.id == 608168595314180106 or channel.id == 970972545564168232 or channel.id == 877000289146798151:
+        
+            return False
+        if author.id == 97952414625182515 or author.id == 381096304153198604 or author.id == 522817015220666374 or author.id == 416781937059823619 or author.id == 1044589526116470844 or author.id == 803674604999934012:
+            
             return False
 
         guild_cache[author].append(message.content)
         msgs = guild_cache[author]
-        if len(msgs) == msgs.maxlen and len(set(msgs)) == 1:
+
+        if len(msgs) > 2 and len(msgs) < 6 and len(set(msgs)) == 1:
             try:
                 await message.delete()
+                await message.channel.send(f"<@{author.id}>.Discord ID:({author.id}),如果你是人类,立即停止发送这条信息!继续发送重复消息将被识别为广告机踢出!")
+                log.warning(
+                        "已移除来自 ({member}) 的重复消息 在 {guild}".format(
+                            member=author.id, guild=guild.id
+                        )
+                    )
+                return True
+            except discord.HTTPException:
+                pass
+        if len(msgs) == 6 and len(set(msgs)) == 1:
+            try:
+                ysch = self.bot.get_user(1044589526116470844)
+                await self.repeattosoftban(guild, ysch, message, channel, author, "[自动]多次重复内容轰炸")
+                await message.channel.send(f"<@{author.id}>.Discord ID:({author.id}),连续发送六条重复消息,鉴定为广告机,已全部撤回并踢出.")
+
+                log.warning(
+                        "已移除用户 ({member}) 在 {guild}".format(
+                            member=author.id, guild=guild.id
+                        )
+                    )
+                log.info(len(msgs))
                 return True
             except discord.HTTPException:
                 pass
@@ -146,16 +250,15 @@ class Events(MixinMeta):
             return
 
         #  Bots and mods or superior are ignored from the filter
-        mod_or_superior = await is_mod_or_superior(self.bot, obj=author)
-        if mod_or_superior:
-            return
+
         # As are anyone configured to be
-        if await self.bot.is_automod_immune(message):
-            return
+        #if await self.bot.is_automod_immune(message):
+        #   return
 
         await i18n.set_contextual_locales_from_guild(self.bot, message.guild)
 
         deleted = await self.check_duplicates(message)
+
         if not deleted:
             await self.check_mention_spam(message)
 

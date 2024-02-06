@@ -4,7 +4,7 @@ from collections import defaultdict, deque
 from typing import List, Optional
 from AAA3A_utils import Cog, CogsUtils, Menu
 from redbot.core.utils.mod import get_audit_reason
-
+import requests
 import discord
 from redbot.core import i18n, modlog, commands
 from redbot.core.utils.mod import is_mod_or_superior
@@ -120,7 +120,7 @@ class Events(MixinMeta):
         if len(msgs) > 2 and len(msgs) < 6 and len(set(msgs)) == 1:
             try:
                 await message.delete()
-                await message.channel.send(f"<@{author.id}>.Discord ID:({author.id}),如果你是人类,立即停止发送这条信息!继续发送重复消息将被识别为广告机踢出!")
+                await message.channel.send(f"<@{author.id}>.Discord ID:({author.id}),如果你是人类,立即停止发送这条信息!继续发送重复消息将被识别为广告机踢出!", delete_after = 60)
                 log.warning(
                         "已移除来自 ({member}) 的重复消息 在 {guild}".format(
                             member=author.id, guild=guild.id
@@ -235,6 +235,49 @@ class Events(MixinMeta):
                 )
                 return True
         return False
+    
+    async def muteadacc(self, message: discord.Message):
+        async with self.config.user(message.author).iftrusted() as trusted:
+            if trusted:
+                return
+
+        userid = message.author.id
+        url = f"https://discord.com/api/v9/users/{userid}/profile?with_mutual_guilds=true&with_mutual_friends_count=false&guild_id={message.guild.id}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0",
+            "Accept": "*/*",
+            "Accept-Language": "zh-CN,en-US;q=0.5",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Authorization": ""
+                }
+
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            try:
+                json_result = response.json()
+                bio = json_result.get('user', {}).get('bio')
+        
+                if bio:
+                    log.info(f"(Bio):{bio}")
+                    keywords_to_exclude = [
+                '招代理', '购买', '招辅助代理', '辅助代理商', 'eseller', '中国经销',
+                '中国总经销', '官方经销', '总经销', '官方代理', '官方总代', '诚招合作', '加盟',
+                '一起赚钱', '转售菜单', '转售辅助', '中国卖家', '入代私聊', '科技代理商'
+                ]
+                    for keyword in keywords_to_exclude:
+                        if keyword in bio:
+                            muterole = message.guild.get_role(1058656520851697714)
+                            ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-仅管理员频道
+                            await message.author.add_roles(muterole, reason="[自动]个人介绍:潜在的代理或经销商")
+                            await ntfcn.send(f"{message.author.mention}的个人介绍中可能存在广告行为,已被临时禁言,管理员请人工确认.\n 当前个人介绍快照:{bio} \n如需取消禁言并信任此用户的个人介绍,请输入命令:&pftrust {message.author.id}")
+                            await message.author.send("您被识别为潜在的广告或垃圾账号,已被禁言,请等待管理员人工确认.")
+                            break
+            except ValueError:
+                log.info("无法解析JSON结果。")
+        else:
+            log.info(f"请求失败: {response.status_code}")
+            log.info(response.text)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -252,8 +295,8 @@ class Events(MixinMeta):
         #  Bots and mods or superior are ignored from the filter
 
         # As are anyone configured to be
-        #if await self.bot.is_automod_immune(message):
-        #   return
+        if await self.bot.is_automod_immune(message):
+            return
 
         await i18n.set_contextual_locales_from_guild(self.bot, message.guild)
 
@@ -261,6 +304,7 @@ class Events(MixinMeta):
 
         if not deleted:
             await self.check_mention_spam(message)
+            await self.muteadacc(message)
 
     @staticmethod
     def _update_past_names(name: str, name_list: List[Optional[str]]) -> None:

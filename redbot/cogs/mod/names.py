@@ -322,3 +322,25 @@ class ModInfo(MixinMeta):
                 await ctx.send(msg)
         else:
             await ctx.send(_("That member doesn't have any recorded name or nickname change."))
+
+    @commands.command()
+    async def pftrust(self, ctx: commands.Context, *, member: discord.Member):
+        """信任用户的个人介绍."""
+        async with self.config.user(member).iftrusted() as trusted:
+            trusted.append(member.id)
+            
+            muterole = ctx.guild.get_role(1058656520851697714)
+            await ctx.send(_("已解除禁言并排除对用户{usrname}的个人简介检测").format(usrname=member.name))
+            await member.remove_roles(muterole, reason="解除可疑用户禁言")
+            await member.send("您已通过人工审核,现在可以正常发言了.对您造成的不便请谅解.")
+
+    @commands.command()
+    async def pfcomf(self, ctx: commands.Context, *, member: discord.Member):
+        """确认用户的个人介绍违规."""
+        await self.config.user(member).iftrusted.set([])
+        muterole = ctx.guild.get_role(1058656520851697714)
+        await member.add_roles(muterole, reason="[自动]个人介绍:潜在的代理或经销商")
+        await ctx.send(f"{member.mention}的个人介绍中可能存在广告行为,已被禁言,由管理员人工确认 \n如需取消禁言并信任此用户的个人介绍,请输入命令:&pftrust {member.id}")
+        await member.send("您被识别为潜在的广告或垃圾账号,已被管理员人工禁言,不可申诉.")
+
+

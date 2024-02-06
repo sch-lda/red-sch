@@ -237,10 +237,15 @@ class Events(MixinMeta):
         return False
     
     async def muteadacc(self, message: discord.Message):
+        guildid = message.guild.id
+        if guildid != 388227343862464513:
+            return
         async with self.config.user(message.author).iftrusted() as trusted:
             if trusted:
                 return
-
+        Authorization = await self.bot.get_shared_api_tokens("dc2auth")
+        if Authorization.get("auth") is None:
+            return
         userid = message.author.id
         url = f"https://discord.com/api/v9/users/{userid}/profile?with_mutual_guilds=true&with_mutual_friends_count=false&guild_id={message.guild.id}"
         headers = {
@@ -248,7 +253,7 @@ class Events(MixinMeta):
             "Accept": "*/*",
             "Accept-Language": "zh-CN,en-US;q=0.5",
             "Accept-Encoding": "gzip, deflate, br",
-            "Authorization": ""
+            "Authorization": Authorization.get("auth")
                 }
 
         response = requests.get(url, headers=headers)

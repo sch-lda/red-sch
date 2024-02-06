@@ -262,13 +262,14 @@ class Events(MixinMeta):
                     log.info(f"(Bio):{bio}")
                     keywords_to_exclude = [
                 '招代理', '购买', '招辅助代理', '辅助代理商', 'eseller', '中国经销',
-                '中国总经销', '官方经销', '总经销', '官方代理', '官方总代', '诚招合作', '加盟',
-                '一起赚钱', '转售菜单', '转售辅助', '中国卖家', '入代私聊', '科技代理商'
+                '中国总经销', '官方经销', '总经销', '代理', '官方总代', '诚招合作', '加盟',
+                '一起赚钱', '转售菜单', '转售辅助', '中国卖家', '入代私聊', '科技代理商',' 代理', '經銷', '低價',
+                'Shop', 'Cheapest', 'Store', '商业合作'
                 ]
                     for keyword in keywords_to_exclude:
                         if keyword in bio:
                             muterole = message.guild.get_role(1058656520851697714)
-                            ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-仅管理员频道
+                            ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
                             await message.author.add_roles(muterole, reason="[自动]个人介绍:潜在的代理或经销商")
                             await ntfcn.send(f"{message.author.mention}的个人介绍中可能存在广告行为,已被临时禁言,管理员请人工确认.\n 当前个人介绍快照:{bio} \n如需取消禁言并信任此用户的个人介绍,请输入命令:&pftrust {message.author.id}")
                             await message.author.send("您被识别为潜在的广告或垃圾账号,已被禁言,请等待管理员人工确认.")

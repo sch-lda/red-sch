@@ -104,7 +104,6 @@ class Events(MixinMeta):
         if guild_cache is None:
             repeats = await self.config.guild(guild).delete_repeats()
             if repeats == -1:
-                log.info(-1)
                 return False
             guild_cache = self.cache[guild.id] = defaultdict(lambda: deque(maxlen=6))
         
@@ -299,7 +298,9 @@ class Events(MixinMeta):
         pattern_hidelink = re.compile(r'\[([^\]]+)\]\((https?:\/\/[^\s]+)\)')
         match_hidelink = pattern_hidelink.search(message.content)
         if match_hidelink:
-            await message.channel.send(f'检测到markdown语法隐藏的网址,你看到的网址并非将要访问的目标网址,真实的域名被发送者故意隐藏了! 继续访问存在潜在的诈骗风险,请在访问前再次检查此网址,不要输入任何账号密码等敏感信息,不要相信天上会掉馅饼,拒绝free nitro、steam礼金等骗局,警惕steam、discord等盗号')
+            await message.delete()
+            await message.channel.send(f'检测到可疑消息,已撤回. 请勿尝试使用Markdown语法隐藏真实网址.原始消息将私发给您,请重新编辑')
+            await message.author.send(f"{message.content}")
             ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
             await ntfcn.send(f"{message.author.mention}的消息中存在使用Markdown语法隐藏的网址. \n 当前消息快照:{message.content}")
 

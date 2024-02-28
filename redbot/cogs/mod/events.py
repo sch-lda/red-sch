@@ -10,6 +10,10 @@ from redbot.core import i18n, modlog, commands
 from redbot.core.utils.mod import is_mod_or_superior
 from .abc import MixinMeta
 from .utils import is_allowed_by_hierarchy
+import re
+from PIL import Image
+from pyzbar import pyzbar
+import os
 
 _ = i18n.Translator("Mod", __file__)
 log = logging.getLogger("red.mod")
@@ -264,7 +268,6 @@ class Events(MixinMeta):
                 bio = json_result.get('user', {}).get('bio')
         
                 if bio:
-                    log.info(f"(Bio):{bio}")
                     keywords_to_exclude = [
                 '招代理', '购买', '招辅助代理', '辅助代理商', 'eseller', '中国经销',
                 '中国总经销', '官方经销', '总经销', '代理', '官方总代', '诚招合作', '加盟',
@@ -281,10 +284,87 @@ class Events(MixinMeta):
                             break
             except ValueError:
                 log.info("无法解析JSON结果。")
+                ntfcnsec = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
+                await ntfcnsec.send("Bio解析模块疑似故障")
+
         else:
             log.info(f"请求失败: {response.status_code}")
             log.info(response.text)
 
+    async def check_hidelinks(self, message: discord.Message):
+        guildid = message.guild.id
+        if guildid != 388227343862464513:
+            return
+
+        pattern_hidelink = re.compile(r'\[([^\]]+)\]\((https?:\/\/[^\s]+)\)')
+        match_hidelink = pattern_hidelink.search(message.content)
+        if match_hidelink:
+            await message.channel.send(f'检测到markdown语法隐藏的网址,你看到的网址并非将要访问的目标网址,真实的域名被发送者故意隐藏了! 继续访问存在潜在的诈骗风险,请在访问前再次检查此网址,不要输入任何账号密码等敏感信息,不要相信天上会掉馅饼,拒绝free nitro、steam礼金等骗局,警惕steam、discord等盗号')
+            ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
+            await ntfcn.send(f"{message.author.mention}的消息中存在使用Markdown语法隐藏的网址. \n 当前消息快照:{message.content}")
+
+    async def decodeqr(self, message: discord.Message):
+        guildid = message.guild.id
+        if guildid != 388227343862464513:
+            return
+
+        if message.attachments:
+            ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
+            count_mk = 0
+            for attachment in message.attachments:
+                if attachment.filename.endswith('.png') or attachment.filename.endswith('.jpg') or attachment.filename.endswith('.jpeg'):
+                    await attachment.save(f"/root/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")
+                    img = Image.open(f"/root/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")
+                    decoded_objects = pyzbar.decode(img)
+            
+                    if decoded_objects:
+                        for obj in decoded_objects:
+                            qr_code_data = obj.data.decode("utf-8")
+                            if "wxp://" in qr_code_data or "qr.alipay.com" in qr_code_data:
+                                await message.delete()
+                                await message.channel.send("检测到微信/支付宝收款码,已撤回.本群禁止金钱交易.请勿扫码付款,存在诈骗风险.")
+                                await ntfcn.send(f"{message.author.mention}的消息中存在微信/支付宝收款码. \n 二维码链接:{qr_code_data}")
+                                continue
+                            if "qm.qq.com" in qr_code_data or "group_code" in qr_code_data or "jq.qq.com" in qr_code_data:
+                                await message.delete()
+                                await message.channel.send("从二维码中识别到QQ群或个人名片信息,已撤回,未经频道主同意请勿引流! 请勿加入此QQ群或添加此人,存在诈骗风险")
+                                await ntfcn.send(f"{message.author.mention}的消息中存在QQ群二维码或个人名片. \n 二维码链接:{qr_code_data}")
+                                continue
+                            if "weixin.qq.com/g" in qr_code_data or "u.wechat.com" in qr_code_data or "jq.qq.com" in qr_code_data:
+                                await message.delete()
+                                await message.channel.send("从二维码中识别到微信群或个人名片信息,已撤回,未经频道主同意请勿引流! 请勿加入此微信群或添加此人,存在诈骗风险")
+                                await ntfcn.send(f"{message.author.mention}的消息中存在微信群二维码或个人名片. \n 二维码链接:{qr_code_data}")
+                                continue
+                            if "weixin110.qq.com" in qr_code_data:
+                                await message.delete()
+                                await message.channel.send("识别到疑似微信注册辅助验证二维码,已撤回! 请勿替陌生人完成微信注册或解封验证!")
+                                await ntfcn.send(f"{message.author.mention}的消息中存在微信注册辅助验证二维码. \n 二维码链接:{qr_code_data}")
+                                continue
+                            if "discord.com/ra/" in qr_code_data:
+                                await message.delete()
+                                await message.channel.send("识别到疑似Discord登录二维码,已撤回! 请勿扫码付款,存在盗号风险!")
+                                await ntfcn.send(f"{message.author.mention}的消息中存在疑似Discord登录二维码. \n 二维码链接:{qr_code_data}")
+                                continue
+                            await message.channel.send(f"检测到二维码,已完成内容识别：{qr_code_data}")
+                    img.close()
+                    os.remove(f"/root/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")        
+                count_mk += 1
+
+    async def checkurl(self, message: discord.Message):
+        guildid = message.guild.id
+        if guildid != 388227343862464513:
+            return
+        ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
+
+        if "weixin110.qq.com" in message.content or "weixin.qq.com/g" in message.content or "u.wechat.com" in message.content or "jq.qq.com" in message.content or "qm.qq.com" in message.content or "group_code" in message.content or "qr.alipay.com" in message.content or "wxp://" in message.content or "/t.me/" in message.content or "discord.com/ra/" in message.content:
+            if "t.me" in message.content and "GTA5OnlineToolsPornVideo" in message.content:
+                return
+            await message.delete()
+            await message.channel.send("检测可疑的链接,已撤回!")
+            await ntfcn.send(f"{message.author.mention}的消息中存在可疑链接(收付款/个人或群名片/微信辅助验证/discord登录). \n 当前消息快照:{message.content}")
+            return
+            
+        
     @commands.Cog.listener()
     async def on_message(self, message):
         author = message.author
@@ -311,7 +391,9 @@ class Events(MixinMeta):
         if not deleted:
             await self.check_mention_spam(message)
             await self.muteadacc(message)
-
+            await self.check_hidelinks(message)
+            await self.decodeqr(message)
+            await self.checkurl(message)
     @staticmethod
     def _update_past_names(name: str, name_list: List[Optional[str]]) -> None:
         while None in name_list:  # clean out null entries from a bug

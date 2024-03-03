@@ -357,15 +357,12 @@ class Events(MixinMeta):
             return
         ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
 
-        if "weixin110.qq.com" in message.content or "weixin.qq.com/g" in message.content or "u.wechat.com" in message.content or "jq.qq.com" in message.content or "qm.qq.com" in message.content or "group_code" in message.content or "qr.alipay.com" in message.content or "wxp://" in message.content or "/t.me/" in message.content or "discord.com/ra/" in message.content:
-            if "t.me" in message.content and "GTA5OnlineToolsPornVideo" in message.content:
-                return
+        if "weixin110.qq.com" in message.content or "weixin.qq.com/g" in message.content or "u.wechat.com" in message.content or "jq.qq.com" in message.content or "qm.qq.com" in message.content or "group_code" in message.content or "qr.alipay.com" in message.content or "wxp://" in message.content or "discord.com/ra/" in message.content:
             await message.delete()
             await message.channel.send("检测可疑的链接,已撤回!")
             await ntfcn.send(f"{message.author.mention}的消息中存在可疑链接(收付款/个人或群名片/微信辅助验证/discord登录). \n 当前消息快照:{message.content}")
             return
             
-        
     @commands.Cog.listener()
     async def on_message(self, message):
         author = message.author

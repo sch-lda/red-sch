@@ -314,8 +314,8 @@ class Events(MixinMeta):
             count_mk = 0
             for attachment in message.attachments:
                 if attachment.filename.endswith('.png') or attachment.filename.endswith('.jpg') or attachment.filename.endswith('.jpeg'):
-                    await attachment.save(f"~/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")
-                    img = Image.open(f"~/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")
+                    await attachment.save(f"/home/sch/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")
+                    img = Image.open(f"/home/sch/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")
                     decoded_objects = pyzbar.decode(img)
             
                     if decoded_objects:
@@ -348,7 +348,7 @@ class Events(MixinMeta):
                                 continue
                             await message.channel.send(f"检测到二维码,已完成内容识别：{qr_code_data}")
                     img.close()
-                    os.remove(f"~/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")        
+                    os.remove(f"/home/sch/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")        
                 count_mk += 1
 
     async def checkurl(self, message: discord.Message):

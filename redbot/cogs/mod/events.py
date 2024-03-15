@@ -14,6 +14,8 @@ import re
 from PIL import Image
 from pyzbar import pyzbar
 import os
+import asyncio
+import tldextract
 
 _ = i18n.Translator("Mod", __file__)
 log = logging.getLogger("red.mod")
@@ -354,15 +356,127 @@ class Events(MixinMeta):
     async def checkurl(self, message: discord.Message):
         guildid = message.guild.id
         if guildid != 388227343862464513:
-            return
+            return False
         ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
 
         if "weixin110.qq.com" in message.content or "weixin.qq.com/g" in message.content or "u.wechat.com" in message.content or "jq.qq.com" in message.content or "qm.qq.com" in message.content or "group_code" in message.content or "qr.alipay.com" in message.content or "wxp://" in message.content or "discord.com/ra/" in message.content:
             await message.delete()
             await message.channel.send("检测可疑的链接,已撤回!")
             await ntfcn.send(f"{message.author.mention}的消息中存在可疑链接(收付款/个人或群名片/微信辅助验证/discord登录). \n 当前消息快照:{message.content}")
+            return True
+        return False
+    
+    async def VT_file_scan(self, file_path):
+        VT_key = await self.bot.get_shared_api_tokens("virustotal")
+        if VT_key.get("apikey") is None:
             return
+        url = 'https://www.virustotal.com/api/v3/files'
+        headers = {'x-apikey': VT_key.get("apikey")}
+        with open(file_path, 'rb') as file_f:
+            response = requests.post(url, files={'file': file_f}, headers=headers)
+        os.remove(file_path)
+        if response.status_code == 200:
+            json_response = response.json()
+
+            data = json_response['data']
+            aid = data['id']
+
+            url = f'https://www.virustotal.com/api/v3/analyses/{aid}'
+            headers = {'x-apikey': VT_key.get("apikey")}
+
+            while True:
+                response2 = requests.get(url, headers=headers)
+
+                if response2.status_code == 200:
+                    json_response2 = response2.json()
+
+                    statusdata = json_response2['data']['attributes']['status']
+                    if statusdata == 'completed':
+                        break
+                await asyncio.sleep(8)
+
+            analysdata = json_response2['data']
+            if analysdata['attributes']['stats']['malicious'] >= 0 or analysdata['attributes']['stats']['suspicious'] >= 0:
             
+                return [analysdata['attributes']['stats']['malicious'], analysdata['attributes']['stats']['suspicious'], analysdata['attributes']['stats']['harmless']]
+        return [100,100]
+
+    async def VT_url_scan(self, susurl):
+        VT_key = await self.bot.get_shared_api_tokens("virustotal")
+        if VT_key.get("apikey") is None:
+            return
+        url = 'https://www.virustotal.com/api/v3/urls'
+        query_params = {'url': susurl}
+        headers = {'x-apikey': VT_key.get("apikey")}
+
+        response = requests.post(url, params=query_params, headers=headers)
+        if response.status_code == 200:
+            json_response = response.json()
+
+            data = json_response['data']
+            aid = data['id']
+
+            url = f'https://www.virustotal.com/api/v3/analyses/{aid}'
+            headers = {'x-apikey': VT_key.get("apikey")}
+
+            while True:
+                response2 = requests.get(url, headers=headers)
+
+                if response2.status_code == 200:
+                    json_response2 = response2.json()
+                    statusdata = json_response2['data']['attributes']['status']
+                    if statusdata == 'completed':
+                        break
+                await asyncio.sleep(8)
+
+            analysdata = json_response2['data']
+            if analysdata['attributes']['stats']['malicious'] >= 0 or analysdata['attributes']['stats']['suspicious'] >= 0:            
+                return [analysdata['attributes']['stats']['malicious'], analysdata['attributes']['stats']['suspicious'], analysdata['attributes']['stats']['harmless']]
+        return [100,100]
+
+
+    async def filesafecheck(self, message: discord.Message):
+            if len(message.attachments) > 0:
+                for attachment in message.attachments:
+                    file_path = f'/home/sch/bot_tmp/atc/{attachment.filename}'
+                    if attachment.content_type == None:
+                        return
+                    if attachment.content_type.startswith("image") or attachment.content_type.startswith("text"):
+                        return
+                    await attachment.save(file_path)
+                    if os.path.getsize(file_path) > 30 * 1024 * 1024:
+                        os.remove(file_path)
+                        return
+            
+                    detectcount = await self.VT_file_scan(file_path)
+                    if detectcount[0] == 100:
+                        # await message.channel.send(f'警告：文件 {attachment.filename} 病毒扫描失败！')
+                        return
+                    if detectcount[0] > 0 and detectcount[0] < 10:
+                        await message.channel.send(f'{message.author.mention}上传的文件{attachment.filename}经VirusTotal在线查毒，{detectcount[0]} 个引擎标记为病毒, 判定为低风险. 结果仅供参考.')
+                    if detectcount[0] >= 10 :
+                        await message.channel.send(f'{message.author.mention}上传的文件{attachment.filename}经VirusTotal在线查毒，{detectcount[0]} 个引擎标记为病毒, 判定为低风险. 结果仅供参考.')
+    
+    async def urlsafecheck(self, message: discord.Message):
+                content = message.content
+                urlpattern = r"(https?://\S+)"
+                urls = re.findall(urlpattern, content)
+                for url in urls:
+                    if url.startswith("https://t.me/GTA5OnlineToolsPornVideo/"):
+                        continue
+                    domainpre = tldextract.extract(url).domain
+                    suffix = tldextract.extract(url).suffix
+                    domain = domainpre + "." + suffix
+                    if domain == "github.com" or domain == "youtube.com" or domain == "youtu.be" or domain == "bilibili.com" or domain == "b23.tv" or domain == "githubusercontent.com" or domain == "discord.com" or domain == "discord.gg" or domain == "123pan.com" or domain == "host3650.live" or domain == "microsoft.com" or domain == "unknowncheats" or domain == "wikipedia.org" or domain == "vxtwitter.com" or domain == "twitter.com" or domain == "x.com" or domain == "crazyzhang.cn" or domain == "discordapp.com":
+                        continue
+                    detectcount = await self.VT_url_scan(url)
+                    if detectcount[0] == 100:
+                        # await message.channel.send(f'警告：网址 安全扫描失败！')
+                        return
+                    if detectcount[0] > 0:
+                        await message.channel.send(f'{message.author.mention}发送的网址经VirusTotal在线扫描，{detectcount[0]} 个引擎标记为病毒, {detectcount[1]} 个引擎标记为可疑, {detectcount[2]} 个引擎标记为安全. 结果仅供参考.')
+
+        
     @commands.Cog.listener()
     async def on_message(self, message):
         author = message.author
@@ -391,7 +505,11 @@ class Events(MixinMeta):
             await self.muteadacc(message)
             await self.check_hidelinks(message)
             await self.decodeqr(message)
-            await self.checkurl(message)
+            deleted = await self.checkurl(message)
+            if not deleted:
+                await self.urlsafecheck(message)
+                await self.filesafecheck(message)
+
     @staticmethod
     def _update_past_names(name: str, name_list: List[Optional[str]]) -> None:
         while None in name_list:  # clean out null entries from a bug

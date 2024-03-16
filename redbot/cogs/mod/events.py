@@ -134,7 +134,7 @@ class Events(MixinMeta):
             try:
                 ysch = self.bot.get_user(1044589526116470844)
                 await self.repeattosoftban(guild, ysch, message, channel, author, "[自动]多次重复内容轰炸")
-                await message.channel.send(f"<@{author.id}> 被识别为广告机,已撤回近24h消息并踢出.使用```&def messages user {author.id}```查看此用户近72h消息.", delete_after = 60)
+                await message.channel.send(f"<@{author.id}> 被识别为广告机,已撤回近24h消息并踢出.使用```&def messages user {author.id}```查看此用户近72h消息.")
 
                 log.warning(
                         "已移除用户 ({member}) 在 {guild}".format(

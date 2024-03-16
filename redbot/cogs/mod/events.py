@@ -295,7 +295,7 @@ class Events(MixinMeta):
     async def check_hidelinks(self, message: discord.Message):
         guildid = message.guild.id
         if guildid != 388227343862464513:
-            return
+            return False
 
         pattern_hidelink = re.compile(r'\[([^\]]+)\]\((https?:\/\/[^\s]+)\)')
         match_hidelink = pattern_hidelink.search(message.content)
@@ -305,6 +305,8 @@ class Events(MixinMeta):
             await message.author.send(f"{message.content}")
             ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
             await ntfcn.send(f"{message.author.mention}的消息中存在使用Markdown语法隐藏的网址. \n 当前消息快照:{message.content}")
+            return True
+        return False
 
     async def decodeqr(self, message: discord.Message):
         guildid = message.guild.id
@@ -503,12 +505,13 @@ class Events(MixinMeta):
         if not deleted:
             await self.check_mention_spam(message)
             await self.muteadacc(message)
-            await self.check_hidelinks(message)
-            await self.decodeqr(message)
-            deleted = await self.checkurl(message)
+            deleted = await self.check_hidelinks(message)
             if not deleted:
-                await self.urlsafecheck(message)
-                await self.filesafecheck(message)
+                await self.decodeqr(message)
+                deleted = await self.checkurl(message)
+                if not deleted:
+                    await self.urlsafecheck(message)
+                    await self.filesafecheck(message)
 
     @staticmethod
     def _update_past_names(name: str, name_list: List[Optional[str]]) -> None:

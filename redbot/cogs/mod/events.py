@@ -141,7 +141,6 @@ class Events(MixinMeta):
                             member=author.id, guild=guild.id
                         )
                     )
-                log.info(len(msgs))
                 return True
             except discord.HTTPException:
                 pass
@@ -156,7 +155,6 @@ class Events(MixinMeta):
                             member=author.id, guild=guild.id
                         )
                     )
-                log.info(len(msgs))
                 return True
             except discord.HTTPException:
                 pass

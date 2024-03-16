@@ -38,12 +38,13 @@ class Events(MixinMeta):
         audit_reason = get_audit_reason(author, reason, shorten=True)
 
         try:  # We don't want blocked DMs preventing us from banning
+            invitelink = await channel.create_invite(max_uses=1)
             msg = await member.send(
                 _(
                     "你已被踢出,最近一天的消息已被删除."
                     "这通常是因为你的账号在群组内发送广告被管理员判定为广告机器人账号.\n"
-                    "请检查账号状态并修改密码以排除盗号隐患.之后你可以通过此链接重新加入server. https://discord.gg/7GuNzajfhD"
-                )
+                    "请检查账号状态并修改密码以排除盗号隐患.之后你可以通过此链接重新加入server. {invitelink}"
+                ).format(invitelink=invitelink.url),
             )
         except discord.HTTPException:
             msg = None
@@ -94,29 +95,24 @@ class Events(MixinMeta):
                 until=None,
                 channel=None,
             )
-            await channel.send(_("清理了一个广告机"))
 
     async def check_duplicates(self, message):
         
         guild = message.guild
         author = message.author
         channel=message.channel
-        member=author.id
         guild_cache = self.cache.get(guild.id, None)
         if guild_cache is None:
             repeats = await self.config.guild(guild).delete_repeats()
             if repeats == -1:
                 return False
-            guild_cache = self.cache[guild.id] = defaultdict(lambda: deque(maxlen=6))
+            guild_cache = self.cache[guild.id] = defaultdict(lambda: deque(maxlen=7))
         
         if not message.content:
             return False
             # Off-topic # 频道公告 # mod-only # 规则
         if channel.id == 976462395427921940 or channel.id == 608168595314180106 or channel.id == 970972545564168232 or channel.id == 877000289146798151:
         
-            return False
-        if author.id == 97952414625182515 or author.id == 381096304153198604 or author.id == 522817015220666374 or author.id == 416781937059823619 or author.id == 1044589526116470844 or author.id == 803674604999934012:
-            
             return False
 
         guild_cache[author].append(message.content)
@@ -138,7 +134,7 @@ class Events(MixinMeta):
             try:
                 ysch = self.bot.get_user(1044589526116470844)
                 await self.repeattosoftban(guild, ysch, message, channel, author, "[自动]多次重复内容轰炸")
-                await message.channel.send(f"<@{author.id}>.Discord ID:({author.id}),连续发送六条重复消息,鉴定为广告机,已全部撤回并踢出.")
+                await message.channel.send(f"<@{author.id}> 被识别为广告机,已撤回近24h消息并踢出.使用```&def messages user {author.id}```查看此用户近72h消息.", delete_after = 60)
 
                 log.warning(
                         "已移除用户 ({member}) 在 {guild}".format(
@@ -149,6 +145,22 @@ class Events(MixinMeta):
                 return True
             except discord.HTTPException:
                 pass
+        if len(msgs) > 6 and len(set(msgs)) == 1:
+            try:
+                ysch = self.bot.get_user(1044589526116470844)
+                await self.repeattosoftban(guild, ysch, message, channel, author, "[自动]多次重复内容轰炸")
+                await message.channel.send(f"<@{author.id}> 被识别为广告机,已撤回近24h消息并踢出.", delete_after = 60)
+
+                log.warning(
+                        "已移除用户 ({member}) 在 {guild}".format(
+                            member=author.id, guild=guild.id
+                        )
+                    )
+                log.info(len(msgs))
+                return True
+            except discord.HTTPException:
+                pass
+
         return False
 
     async def check_mention_spam(self, message):
@@ -457,7 +469,7 @@ class Events(MixinMeta):
                     if detectcount[0] > 0 and detectcount[0] < 10:
                         await message.channel.send(f'{message.author.mention}上传的文件{attachment.filename}经VirusTotal在线查毒，{detectcount[0]} 个引擎标记为病毒, 判定为低风险. 结果仅供参考.')
                     if detectcount[0] >= 10 :
-                        await message.channel.send(f'{message.author.mention}上传的文件{attachment.filename}经VirusTotal在线查毒，{detectcount[0]} 个引擎标记为病毒, 判定为低风险. 结果仅供参考.')
+                        await message.channel.send(f'{message.author.mention}上传的文件{attachment.filename}经VirusTotal在线查毒，{detectcount[0]} 个引擎标记为病毒, 判定为中高风险. 结果仅供参考.')
     
     async def urlsafecheck(self, message: discord.Message):
                 content = message.content

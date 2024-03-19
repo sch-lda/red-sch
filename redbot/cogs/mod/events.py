@@ -308,10 +308,19 @@ class Events(MixinMeta):
         pattern_hidelink = re.compile(r'\[([^\]]+)\]\((https?:\/\/[^\s]+)\)')
         match_hidelink = pattern_hidelink.search(message.content)
         if match_hidelink:
+            relurlpattern = r"(https?://\S+)"
+            scanedurls = re.findall(relurlpattern, message.content)
+            for surl in scanedurls:
+                domainpre = tldextract.extract(surl).domain
+                suffix = tldextract.extract(surl).suffix
+                domain = domainpre + "." + suffix
+                if domain == "discordapp.com":
+                    return
+
             await message.delete()
             await message.channel.send(f'{message.author.mention} 请勿使用markdown语法隐藏真实网址,原始消息已私发给您,请重新编辑', delete_after=60)
             await message.author.send(f"{message.content}")
-            if guildid != 388227343862464513:
+            if guildid == 388227343862464513:
                 ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
                 await ntfcn.send(f"{message.author.mention}的消息中存在使用Markdown语法隐藏的网址. \n 当前消息快照:{message.content}")
             return True

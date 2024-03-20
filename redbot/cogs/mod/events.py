@@ -289,7 +289,7 @@ class Events(MixinMeta):
                             await message.author.add_roles(muterole, reason="[自动]个人介绍:潜在的代理或经销商")
                             if guildid == 388227343862464513:
                                 ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
-                                await ntfcn.send(f"{message.author.mention}的个人介绍中可能存在广告行为,已被临时禁言,管理员请人工确认.\n 当前个人介绍快照:{bio} \n如需取消禁言并信任此用户的个人介绍,请输入命令:&pftrust {message.author.id}")
+                                await ntfcn.send(f"{message.author.mention}的个人介绍中可能存在广告行为,已被临时禁言,管理员请人工确认.\n 当前个人介绍快照:```{bio}``` \n如需取消禁言并信任此用户的个人介绍,请输入命令:```&pftrust {message.author.id}```")
                             try:
                                 await message.author.send("经过对用户名/个人简介/消息的评估,您被识别为潜在的广告或垃圾账号,已被禁言,请等待管理员人工确认.如果您是付费菜单的经销商,我们默认您不需要在小助手群组中寻求帮助,为防止间接的广告行为,您可以继续浏览消息,但不再能够发送消息或添加反应.若您的业务范围不包含付费辅助或成人内容,通常经过人工审核后将解除禁言.")
                             except discord.HTTPException:
@@ -311,7 +311,7 @@ class Events(MixinMeta):
     async def check_hidelinks(self, message: discord.Message):
         guildid = message.guild.id
 
-        pattern_hidelink = re.compile(r'\[([^\]]+)\]\((https?:\/\/[^\s]+)\)')
+        pattern_hidelink = re.compile(r'\[([^\]]+)\]\((https?:\/\/[^\s]+) ?\)')
         match_hidelink = pattern_hidelink.search(message.content)
         if match_hidelink:
             relurlpattern = r"(https?://\S+)"
@@ -326,12 +326,12 @@ class Events(MixinMeta):
             await message.delete()
             await message.channel.send(f'{message.author.mention} 请勿使用markdown语法隐藏真实网址,原始消息已私发给您,请重新编辑', delete_after=60)
             try:
-                await message.author.send(f"{message.content}")
+                await message.author.send(f"请勿使用markdown语法隐藏真实网址,请重新编辑.您的原始消息内容: ```{message.content}```")
             except discord.HTTPException:
                 pass
             if guildid == 388227343862464513:
                 ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
-                await ntfcn.send(f"{message.author.mention}的消息中存在使用Markdown语法隐藏的网址. \n 当前消息快照:{message.content}")
+                await ntfcn.send(f"{message.author.mention}的消息中存在使用Markdown语法隐藏的网址. \n 当前消息快照:```{message.content}```")
             return True
         return False
 
@@ -391,7 +391,7 @@ class Events(MixinMeta):
             await message.channel.send("检测可疑的链接,已撤回!")
             if guildid == 388227343862464513:
                 ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
-                await ntfcn.send(f"{message.author.mention}的消息中存在可疑链接(收付款/个人或群名片/微信辅助验证/discord登录). \n 当前消息快照:{message.content}")
+                await ntfcn.send(f"{message.author.mention}的消息中存在可疑链接(收付款/个人或群名片/微信辅助验证/discord登录). \n 当前消息快照:```{message.content}```")
             return True
         return False
     
@@ -511,9 +511,9 @@ class Events(MixinMeta):
             await message.channel.send(f'{message.author.mention} 您不具有ping everyone or here权限.', delete_after=60)
             if message.guild.id == 388227343862464513:
                 ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
-                await ntfcn.send(f"{message.author.mention}试图mention everyone or here. \n 当前消息快照:{message.content}")
+                await ntfcn.send(f"{message.author.mention}试图mention everyone or here. \n 当前消息快照:```{message.content}```")
             try:
-                await message.author.send(f"您的原始消息是: {message.content}")
+                await message.author.send(f"您的原始消息是: ```{message.content}```")
             except discord.HTTPException:
                 pass
             return True

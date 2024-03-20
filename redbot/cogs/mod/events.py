@@ -506,7 +506,7 @@ class Events(MixinMeta):
                         await message.channel.send(f'{message.author.mention}发送的网址经VirusTotal在线扫描，{detectcount[0]} 个引擎标记为病毒, {detectcount[1]} 个引擎标记为可疑, {detectcount[2]} 个引擎标记为安全. 结果仅供参考.')
 
     async def check_ping_everyone_here(self, message: discord.Message):
-        if message.mention_everyone or message.mention_here:
+        if "@everyone" in message.content or "@here" in message.content:
             await message.delete()
             await message.channel.send(f'{message.author.mention} 您不具有ping everyone or here权限.', delete_after=60)
             if message.guild.id == 388227343862464513:

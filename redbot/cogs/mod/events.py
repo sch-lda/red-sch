@@ -253,8 +253,6 @@ class Events(MixinMeta):
     
     async def muteadacc(self, message: discord.Message):
         guildid = message.guild.id
-        if guildid != 388227343862464513:
-            return
         async with self.config.user(message.author).iftrusted() as trusted:
             if trusted:
                 return
@@ -288,10 +286,15 @@ class Events(MixinMeta):
                     for keyword in keywords_to_exclude:
                         if keyword in bio:
                             muterole = message.guild.get_role(1058656520851697714)
-                            ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
                             await message.author.add_roles(muterole, reason="[自动]个人介绍:潜在的代理或经销商")
-                            await ntfcn.send(f"{message.author.mention}的个人介绍中可能存在广告行为,已被临时禁言,管理员请人工确认.\n 当前个人介绍快照:{bio} \n如需取消禁言并信任此用户的个人介绍,请输入命令:&pftrust {message.author.id}")
-                            await message.author.send("经过对用户名/个人简介/消息的评估,您被识别为潜在的广告或垃圾账号,已被禁言,请等待管理员人工确认.如果您是付费菜单的经销商,我们默认您不需要在小助手群组中寻求帮助,为防止间接的广告行为,您可以继续浏览消息,但不再能够发送消息或添加反应.若您的业务范围不包含付费辅助或成人内容,通常经过人工审核后将解除禁言.")
+                            if guildid == 388227343862464513:
+                                ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
+                                await ntfcn.send(f"{message.author.mention}的个人介绍中可能存在广告行为,已被临时禁言,管理员请人工确认.\n 当前个人介绍快照:{bio} \n如需取消禁言并信任此用户的个人介绍,请输入命令:&pftrust {message.author.id}")
+                            try:
+                                await message.author.send("经过对用户名/个人简介/消息的评估,您被识别为潜在的广告或垃圾账号,已被禁言,请等待管理员人工确认.如果您是付费菜单的经销商,我们默认您不需要在小助手群组中寻求帮助,为防止间接的广告行为,您可以继续浏览消息,但不再能够发送消息或添加反应.若您的业务范围不包含付费辅助或成人内容,通常经过人工审核后将解除禁言.")
+                            except discord.HTTPException:
+                                pass
+                            await message.delete()
                             break
             except ValueError:
                 log.info("无法解析JSON结果。")
@@ -301,6 +304,9 @@ class Events(MixinMeta):
         else:
             log.info(f"请求失败: {response.status_code}")
             log.info(response.text)
+            ntfcnsec = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
+            await ntfcnsec.send("Bio解析模块疑似故障")
+
 
     async def check_hidelinks(self, message: discord.Message):
         guildid = message.guild.id
@@ -319,7 +325,10 @@ class Events(MixinMeta):
 
             await message.delete()
             await message.channel.send(f'{message.author.mention} 请勿使用markdown语法隐藏真实网址,原始消息已私发给您,请重新编辑', delete_after=60)
-            await message.author.send(f"{message.content}")
+            try:
+                await message.author.send(f"{message.content}")
+            except discord.HTTPException:
+                pass
             if guildid == 388227343862464513:
                 ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
                 await ntfcn.send(f"{message.author.mention}的消息中存在使用Markdown语法隐藏的网址. \n 当前消息快照:{message.content}")
@@ -375,14 +384,14 @@ class Events(MixinMeta):
 
     async def checkurl(self, message: discord.Message):
         guildid = message.guild.id
-        if guildid != 388227343862464513:
-            return False
-        ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
+
 
         if "weixin110.qq.com" in message.content or "weixin.qq.com/g" in message.content or "u.wechat.com" in message.content or "jq.qq.com" in message.content or "qm.qq.com" in message.content or "group_code" in message.content or "qr.alipay.com" in message.content or "wxp://" in message.content or "discord.com/ra/" in message.content:
             await message.delete()
             await message.channel.send("检测可疑的链接,已撤回!")
-            await ntfcn.send(f"{message.author.mention}的消息中存在可疑链接(收付款/个人或群名片/微信辅助验证/discord登录). \n 当前消息快照:{message.content}")
+            if guildid == 388227343862464513:
+                ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
+                await ntfcn.send(f"{message.author.mention}的消息中存在可疑链接(收付款/个人或群名片/微信辅助验证/discord登录). \n 当前消息快照:{message.content}")
             return True
         return False
     
@@ -496,6 +505,18 @@ class Events(MixinMeta):
                     if detectcount[0] > 0:
                         await message.channel.send(f'{message.author.mention}发送的网址经VirusTotal在线扫描，{detectcount[0]} 个引擎标记为病毒, {detectcount[1]} 个引擎标记为可疑, {detectcount[2]} 个引擎标记为安全. 结果仅供参考.')
 
+    async def check_ping_everyone_here(self, message: discord.Message):
+        if message.mention_everyone or message.mention_here:
+            await message.delete()
+            await message.channel.send(f'{message.author.mention} 您不具有ping everyone or here权限.', delete_after=60)
+            if message.guild.id == 388227343862464513:
+                ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
+                await ntfcn.send(f"{message.author.mention}试图mention everyone or here. \n 当前消息快照:{message.content}")
+            try:
+                await message.author.send(f"您的原始消息是: {message.content}")
+            except discord.HTTPException:
+                pass
+            return True
         
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -525,11 +546,13 @@ class Events(MixinMeta):
             await self.muteadacc(message)
             deleted = await self.check_hidelinks(message)
             if not deleted:
-                await self.decodeqr(message)
-                deleted = await self.checkurl(message)
+                deleted = await self.check_ping_everyone_here(message)
                 if not deleted:
-                    await self.urlsafecheck(message)
-                    await self.filesafecheck(message)
+                    await self.decodeqr(message)
+                    deleted = await self.checkurl(message)
+                    if not deleted:
+                        await self.urlsafecheck(message)
+                        await self.filesafecheck(message)
 
     @staticmethod
     def _update_past_names(name: str, name_list: List[Optional[str]]) -> None:

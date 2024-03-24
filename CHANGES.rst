@@ -1,5 +1,24 @@
 .. Red changelogs
 
+Redbot 3.5.7 (2024-03-24)
+=========================
+
+| Thanks to all these amazing people that contributed to this release:
+| :ghuser:`aikaterna`, :ghuser:`Flame442`, :ghuser:`karlsbjorn`, :ghuser:`Jackenmen`
+
+This is a hotfix release fixing a bug with Red's reaction-based menus introduced in the previous release.
+
+End-user changelog
+------------------
+
+Fixes
+*****
+
+- **Core** - Fixed an issue with Red's reaction-based menus *with custom controls* not working properly (:issue:`6324`)
+- **Core - Bot Commands** - Updated supported image formats in ``[p]set bot avatar``'s error messages to include GIFs (:issue:`6323`)
+
+----
+
 Redbot 3.5.6 (2024-03-22)
 =========================
 
@@ -63,12 +82,12 @@ Changes
 - **Core - Utils Package** - The `menu()` utility function received a new `provisional <developer-guarantees-exclusions>` ``user`` parameter for defining who can interact with the menu (instead of the default ``ctx.author``) (:issue:`4913`)
 
     If no issues arise, we plan on including this parameter under developer guarantees
-    in the first release made after 2024-05-18.
+    in the first release made after 2024-05-24.
 
 - **Core - Utils Package** - The `SimpleMenu.start()` method received a new `provisional <developer-guarantees-exclusions>` ``user`` parameter for defining who can interact with the menu (instead of the default ``ctx.author``) (:issue:`4913`)
 
     If no issues arise, we plan on including this parameter under developer guarantees
-    in the first release made after 2024-05-18.
+    in the first release made after 2024-05-24.
 
 Fixes
 *****

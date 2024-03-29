@@ -771,6 +771,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
             return
         await i18n.set_contextual_locales_from_guild(self.bot, guild)
         if guild.id in self._server_mutes:
+
             if member.id in self._server_mutes[guild.id]:
                 role = guild.get_role(mute_role)
                 if not role:
@@ -784,6 +785,9 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                 await self.mute_user(
                     guild, guild.me, member, until, _("Previously muted in this server.")
                 )
+                if guild.id == 388227343862464513:
+                    await guild.get_channel(1162401982649204777).send(
+                            f"此前被禁言的 {member.mention} 已重新加入服务器, 已重新禁言")
 
     @commands.group()
     @commands.guild_only()

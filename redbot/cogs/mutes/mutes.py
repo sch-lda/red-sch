@@ -1156,7 +1156,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
         if duration:
             until = datetime.now(timezone.utc) + duration
             length = humanize_timedelta(timedelta=duration)
-            time = _(" for {length} until {duration}").format(
+            time = _(" {length} 直到 {duration}").format(
                 length=length, duration=discord.utils.format_dt(until)
             )
 
@@ -1165,7 +1165,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
             if default_duration:
                 until = datetime.now(timezone.utc) + timedelta(seconds=default_duration)
                 length = humanize_timedelta(seconds=default_duration)
-                time = _(" for {length} until {duration}").format(
+                time = _(" {length} 直到 {duration}").format(
                     length=length, duration=discord.utils.format_dt(until)
                 )
 
@@ -1188,9 +1188,9 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
             except Exception:
                 pass
         if success_list:
-            msg = _("{users} has been timed out in this server{time}.")
+            msg = _("{users} 被 禁言(Discord官方API){time}.")
             if len(success_list) > 1:
-                msg = _("{users} have been timed out in this server{time}.")
+                msg = _("{users} 被 禁言(Discord官方API){time}.")
             await ctx.send(
                 msg.format(users=humanize_list([f"`{u}`" for u in success_list]), time=time)
             )
@@ -1238,7 +1238,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
             if duration:
                 until = datetime.now(timezone.utc) + duration
                 length = humanize_timedelta(timedelta=duration)
-                time = _(" for {length} until {duration}").format(
+                time = _(" {length} 直到 {duration}").format(
                     length=length, duration=discord.utils.format_dt(until)
                 )
 
@@ -1247,7 +1247,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                 if default_duration:
                     until = datetime.now(timezone.utc) + timedelta(seconds=default_duration)
                     length = humanize_timedelta(seconds=default_duration)
-                    time = _(" for {length} until {duration}").format(
+                    time = _(" {length} 直到 {duration}").format(
                         length=length, duration=discord.utils.format_dt(until)
                     )
 
@@ -1281,7 +1281,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                 self._server_mutes[ctx.guild.id] = {}
             msg = _("{users} 被禁言 {time}.")
             if len(success_list) > 1:
-                msg = _("{users} have been muted in this server{time}.")
+                msg = _("{users} 被禁言 {time}.")
             await ctx.send(
                 msg.format(users=humanize_list([f"`{u}`" for u in success_list]), time=time)
             )

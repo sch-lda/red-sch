@@ -329,7 +329,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                     del muted_users[str(data["member"])]
             del self._server_mutes[guild.id][data["member"]]
             return
-        result = await self.unmute_user(guild, author, member, _("×Ô¶¯½â³ı½ûÑÔ"))
+        result = await self.unmute_user(guild, author, member, _("è‡ªåŠ¨è§£é™¤ç¦è¨€"))
         async with self.config.guild(guild).muted_users() as muted_users:
             if str(member.id) in muted_users:
                 del muted_users[str(member.id)]
@@ -341,11 +341,11 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                 "sunmute",
                 member,
                 author,
-                _("×Ô¶¯½â³ı½ûÑÔ"),
+                _("è‡ªåŠ¨è§£é™¤ç¦è¨€"),
                 until=None,
             )
             await self._send_dm_notification(
-                member, author, guild, _("Server unmute"), _("×Ô¶¯½â³ı½ûÑÔ")
+                member, author, guild, _("Server unmute"), _("è‡ªåŠ¨è§£é™¤ç¦è¨€")
             )
         else:
             chan_id = await self.config.guild(guild).notification_channel()
@@ -436,7 +436,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                 continue
             _member, channel, reason = result
             unmuted_channels.remove(channel)
-        modlog_reason = _("×Ô¶¯½â³ı½ûÑÔ")
+        modlog_reason = _("è‡ªåŠ¨è§£é™¤ç¦è¨€")
 
         channel_list = humanize_list([c.mention for c in unmuted_channels if c is not None])
         if channel_list:
@@ -453,7 +453,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
             until=None,
         )
         await self._send_dm_notification(
-            member, author, guild, _("Server unmute"), _("×Ô¶¯½â³ı½ûÑÔ")
+            member, author, guild, _("Server unmute"), _("è‡ªåŠ¨è§£é™¤ç¦è¨€")
         )
         self._channel_mute_events[guild.id].set()
         if any(results):
@@ -507,7 +507,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                 del self._channel_mutes[channel.id][data["member"]]
             return None
         result = await self.channel_unmute_user(
-            channel.guild, channel, author, member, _("×Ô¶¯½â³ı½ûÑÔ")
+            channel.guild, channel, author, member, _("è‡ªåŠ¨è§£é™¤ç¦è¨€")
         )
         async with self.config.channel(channel).muted_users() as muted_users:
             if str(member.id) in muted_users:
@@ -527,12 +527,12 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                     unmute_type,
                     member,
                     channel.guild.me,
-                    _("×Ô¶¯½â³ı½ûÑÔ"),
+                    _("è‡ªåŠ¨è§£é™¤ç¦è¨€"),
                     until=None,
                     channel=channel,
                 )
                 await self._send_dm_notification(
-                    member, author, channel.guild, notification_title, _("×Ô¶¯½â³ı½ûÑÔ")
+                    member, author, channel.guild, notification_title, _("è‡ªåŠ¨è§£é™¤ç¦è¨€")
                 )
             return None
         else:
@@ -787,7 +787,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
                 )
                 if guild.id == 388227343862464513:
                     await guild.get_channel(1162401982649204777).send(
-                            f"´ËÇ°±»½ûÑÔµÄ {member.mention} ÒÑÖØĞÂ¼ÓÈë·şÎñÆ÷, ÒÑÖØĞÂ½ûÑÔ")
+                            f"æ­¤å‰è¢«ç¦è¨€çš„ {member.mention} å·²é‡æ–°åŠ å…¥æœåŠ¡å™¨, å·²é‡æ–°ç¦è¨€")
 
     @commands.group()
     @commands.guild_only()
@@ -1279,7 +1279,7 @@ class Mutes(VoiceMutes, commands.Cog, metaclass=CompositeMetaClass):
         if success_list:
             if ctx.guild.id not in self._server_mutes:
                 self._server_mutes[ctx.guild.id] = {}
-            msg = _("{users} ±»½ûÑÔ{time}.")
+            msg = _("{users} è¢«ç¦è¨€ {time}.")
             if len(success_list) > 1:
                 msg = _("{users} have been muted in this server{time}.")
             await ctx.send(

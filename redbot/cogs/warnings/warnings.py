@@ -477,17 +477,21 @@ class Warnings(commands.Cog):
             if showmod:
                 title = _("Warning from {user}").format(user=ctx.author)
             else:
-                title = _("Warning")
+                title = _("警告原因")
             em = discord.Embed(
                 title=title, description=reason_type["description"], color=await ctx.embed_colour()
             )
-            em.add_field(name=_("Points"), value=str(reason_type["points"]))
+            em.add_field(name=_("警告次数"), value=str(reason_type["points"]))
             warn_channel = self.bot.get_channel(guild_settings["warn_channel"])
             if warn_channel:
                 if warn_channel.permissions_for(guild.me).send_messages:
                     with contextlib.suppress(discord.HTTPException):
                         await warn_channel.send(
-                            _("{user} has been warned.").format(user=member.mention),
+                            _("{user} 已被警告.").format(user=member.mention),
+                            embed=em,
+                        )
+                        await ctx.channel.send(
+                            _("{user} 已被警告. 请注意自己的行为. 被警告次数越多,禁言时间越长.").format(user=member.mention),
                             embed=em,
                         )
 
@@ -496,7 +500,7 @@ class Warnings(commands.Cog):
                     await ctx.tick()
                 else:
                     await ctx.send(
-                        _("{user} has been warned.").format(user=member.mention), embed=em
+                        _("{user} 已被警告.").format(user=member.mention), embed=em
                     )
         else:
             if not dm_failed:

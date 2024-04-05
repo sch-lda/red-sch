@@ -281,7 +281,7 @@ class Events(MixinMeta):
                 '招代理', '购买', '招辅助代理', '辅助代理商', 'reseller','Reseller', '中国经销',
                 '中国总经销', '官方经销', '总经销', '代理', '官方总代', '诚招合作', '加盟','誠信',
                 '一起赚钱', '转售菜单', '转售辅助', '中国卖家', '入代私聊', '科技代理商',' 代理', '經銷', '低價',
-                'Shop', 'Cheapest', 'Store','shop', 'cheapest', 'store', '商业合作', 'Titan', 'Erebus'
+                'Shop', 'Cheapest', 'Store','shop', 'cheapest', 'store', '商业合作', 'Titan', 'Erebus', 'discord.gg', 'discord.com'
                 ]
                     for keyword in keywords_to_exclude:
                         if keyword in bio:

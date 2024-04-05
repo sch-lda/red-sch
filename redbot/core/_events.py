@@ -143,6 +143,8 @@ def init_events(bot, cli_flags):
     async def on_ready():
         try:
             await _on_ready()
+
+
         except Exception as exc:
             log.critical("The bot failed to get ready!", exc_info=exc)
             sys.exit(ExitCodes.CRITICAL)
@@ -150,6 +152,11 @@ def init_events(bot, cli_flags):
     async def _on_ready():
         if bot._uptime is not None:
             return
+        
+        try:
+            await bot.get_guild(388227343862464513).get_channel(1162401982649204777).send("Bot重新启动成功")
+        except:
+            pass
 
         bot._uptime = datetime.utcnow()
 

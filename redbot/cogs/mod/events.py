@@ -95,7 +95,7 @@ class Events(MixinMeta):
             repeats = await self.config.guild(guild).delete_repeats()
             if repeats == -1:
                 return False
-            guild_cache = self.cache[guild.id] = defaultdict(lambda: deque(maxlen=7))
+            guild_cache = self.cache[guild.id] = defaultdict(lambda: deque(maxlen=6))
         
         if not message.content:
             return False
@@ -106,8 +106,20 @@ class Events(MixinMeta):
 
         guild_cache[author].append(message.content)
         msgs = guild_cache[author]
-
+        # log.info(f"msgslen:{len(msgs)} setmsgslen:{len(set(msgs))}")
         if len(msgs) > 2 and len(msgs) < 6 and len(set(msgs)) == 1:
+            try:
+                await message.delete()
+                await message.channel.send(f"<@{author.id}>.Discord ID:({author.id}),如果你是人类,立即停止发送这条信息!继续发送重复消息将被识别为广告机踢出!", delete_after = 60)
+                log.warning(
+                        "已移除来自 ({member}) 的重复消息 在 {guild}".format(
+                            member=author.id, guild=guild.id
+                        )
+                    )
+                return True
+            except discord.HTTPException:
+                pass
+        if len(msgs) == 6 and len(set(msgs)) == 2:
             try:
                 await message.delete()
                 await message.channel.send(f"<@{author.id}>.Discord ID:({author.id}),如果你是人类,立即停止发送这条信息!继续发送重复消息将被识别为广告机踢出!", delete_after = 60)
@@ -124,21 +136,7 @@ class Events(MixinMeta):
                 ysch = self.bot.get_user(1044589526116470844)
                 await self.repeattosoftban(guild, ysch, channel, author, "[自动]多次重复内容轰炸")
                 await message.channel.send(f"<@{author.id}> 被识别为广告机,已撤回近24h消息并踢出.使用```&def messages user {author.id}```查看此用户近72h消息(仅管理员).")
-
-                log.warning(
-                        "已移除用户 ({member}) 在 {guild}".format(
-                            member=author.id, guild=guild.id
-                        )
-                    )
-                return True
-            except discord.HTTPException:
-                pass
-        if len(msgs) > 6 and len(set(msgs)) == 1:
-            try:
-                ysch = self.bot.get_user(1044589526116470844)
-                await self.repeattosoftban(guild, ysch, channel, author, "[自动]多次重复内容轰炸")
-                await message.channel.send(f"<@{author.id}> 被识别为广告机,已撤回近24h消息并踢出.", delete_after = 60)
-
+                guild_cache.clear()
                 log.warning(
                         "已移除用户 ({member}) 在 {guild}".format(
                             member=author.id, guild=guild.id

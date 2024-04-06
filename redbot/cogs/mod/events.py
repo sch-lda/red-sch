@@ -582,9 +582,9 @@ class Events(MixinMeta):
                 if not deleted:
                     await self.decodeqr(message)
                     deleted = await self.checkurl(message)
-                    if not deleted:
-                        await self.urlsafecheck(message)
-                        await self.filesafecheck(message)
+                    # if not deleted:
+                    #     await self.urlsafecheck(message)
+                    #     await self.filesafecheck(message)
 
     @staticmethod
     def _update_past_names(name: str, name_list: List[Optional[str]]) -> None:

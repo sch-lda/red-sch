@@ -26,10 +26,9 @@ class Events(MixinMeta):
     This is a mixin for the core mod cog
     Has a bunch of things split off to here.
     """
-    async def repeattosoftban(self, guild, author, message, channel, member, reason):
+    async def repeattosoftban(self, guild, author, channel, member, reason):
         guild = guild
         author = author
-        message = message
 
         if author == member:
             log.info("cannot selfban")
@@ -84,17 +83,7 @@ class Events(MixinMeta):
                 member,
                 member.id,
             )
-            await modlog.create_case(
-                self.bot,
-                guild,
-                message.created_at,
-                "softban",
-                member,
-                author,
-                reason,
-                until=None,
-                channel=None,
-            )
+
 
     async def check_duplicates(self, message):
         
@@ -133,7 +122,7 @@ class Events(MixinMeta):
         if len(msgs) == 6 and len(set(msgs)) == 1:
             try:
                 ysch = self.bot.get_user(1044589526116470844)
-                await self.repeattosoftban(guild, ysch, message, channel, author, "[自动]多次重复内容轰炸")
+                await self.repeattosoftban(guild, ysch, channel, author, "[自动]多次重复内容轰炸")
                 await message.channel.send(f"<@{author.id}> 被识别为广告机,已撤回近24h消息并踢出.使用```&def messages user {author.id}```查看此用户近72h消息(仅管理员).")
 
                 log.warning(
@@ -147,7 +136,7 @@ class Events(MixinMeta):
         if len(msgs) > 6 and len(set(msgs)) == 1:
             try:
                 ysch = self.bot.get_user(1044589526116470844)
-                await self.repeattosoftban(guild, ysch, message, channel, author, "[自动]多次重复内容轰炸")
+                await self.repeattosoftban(guild, ysch, channel, author, "[自动]多次重复内容轰炸")
                 await message.channel.send(f"<@{author.id}> 被识别为广告机,已撤回近24h消息并踢出.", delete_after = 60)
 
                 log.warning(
@@ -160,6 +149,45 @@ class Events(MixinMeta):
                 pass
 
         return False
+
+    async def check_duplicates_automod(self, execution):
+
+        guild = execution.guild
+        if guild.id != 388227343862464513:
+            return False
+        author = execution.member
+        guild_cache = self.cache.get(guild.id, None)
+        if guild_cache is None:
+            repeats = await self.config.guild(guild).delete_repeats()
+            if repeats == -1:
+                return False
+            guild_cache = self.cache[guild.id] = defaultdict(lambda: deque(maxlen=7))
+        
+        if not execution.content:
+            return False
+        
+        guild_cache[author].append(execution.content)
+        msgs = guild_cache[author]
+
+        if len(msgs) == 6 and len(set(msgs)) == 1:
+            try:
+                ysch = self.bot.get_user(1044589526116470844)
+                invitechannel = guild.get_channel(605035182143176711)
+                modchannel = guild.get_channel(970972545564168232)
+                await modchannel.send(f"已踢出 <@{author.id}> 并通知其修改密码.")
+                await self.repeattosoftban(guild, ysch, invitechannel, author, "[自动]多次重复内容轰炸")
+
+                log.warning(
+                        "已移除用户 ({member}) 在 {guild}".format(
+                            member=author.id, guild=guild.id
+                        )
+                    )
+                return True
+            except discord.HTTPException:
+                pass
+
+        return False
+
 
     async def check_mention_spam(self, message):
         guild, author = message.guild, message.author
@@ -517,7 +545,11 @@ class Events(MixinMeta):
             except discord.HTTPException:
                 pass
             return True
-        
+
+    @commands.Cog.listener()
+    async def on_automod_action(self, execution):
+        await self.check_duplicates_automod(execution)
+ 
     @commands.Cog.listener()
     async def on_message(self, message):
         author = message.author

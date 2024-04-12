@@ -42,7 +42,7 @@ class Events(MixinMeta):
             msg = await member.send(
                 _(
                     "你已被踢出,最近一天的消息已被删除."
-                    "这通常是因为你的账号在群组内发送广告被管理员判定为广告机器人账号.\n"
+                    "这通常是因为你的账号在群组内发送广告被自动化程序判定为广告机器人账号.\n"
                     "请检查账号状态并修改密码以排除盗号隐患.之后你可以通过此链接重新加入server. {invitelink}"
                 ).format(invitelink=invitelink.url),
             )

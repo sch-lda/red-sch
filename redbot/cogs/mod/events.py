@@ -1,3 +1,4 @@
+import datetime
 import logging
 from datetime import timezone
 from collections import defaultdict, deque
@@ -82,6 +83,17 @@ class Events(MixinMeta):
                 author.id,
                 member,
                 member.id,
+            )
+            await modlog.create_case(
+                self.bot,
+                guild,
+                datetime.datetime.now(),
+                "softban",
+                member,
+                author,
+                reason,
+                until=None,
+                channel=None,
             )
 
 

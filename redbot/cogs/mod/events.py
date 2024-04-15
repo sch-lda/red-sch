@@ -159,12 +159,41 @@ class Events(MixinMeta):
                 pass
 
         return False
+    async def ckeck_automod_content(self, execution):
+        guild = execution.guild
+        if guild.id != 388227343862464513:
+            return False
+        author = execution.member
+        if not "discord" in execution.content:
+            return False
+        if execution.action.type == discord.AutoModRuleActionType.send_alert_message:
+            return False
+        if "@everyone" in execution.content or "@here" in execution.content or "nude" in execution.content or "Onlyfans" in execution.content or "Teen" in execution.content or "leak" in execution.content or "Leak" in execution.content or "porn" in execution.content:
+            try:
+                ysch = self.bot.get_user(1044589526116470844)
+                invitechannel = guild.get_channel(605035182143176711)
+                modchannel = guild.get_channel(970972545564168232)
+                await modchannel.send(f"解析Automod动作+关键词检测: 已踢出 <@{author.id}> 并通知其修改密码.")
+                await self.repeattosoftban(guild, ysch, invitechannel, author, "[自动]Automod综合检测")
+                log.warning(
+                        "已移除用户 ({member}) 在 {guild}".format(
+                            member=author.id, guild=guild.id
+                        )
+                    )
+                return True
+            except discord.HTTPException:
+                pass
+
+
 
     async def check_duplicates_automod(self, execution):
 
         guild = execution.guild
         if guild.id != 388227343862464513:
             return False
+        if execution.action.type == discord.AutoModRuleActionType.send_alert_message:
+            return False
+
         author = execution.member
         guild_cache = self.cache.get(guild.id, None)
         if guild_cache is None:
@@ -179,14 +208,14 @@ class Events(MixinMeta):
         guild_cache[author].append(execution.content)
         msgs = guild_cache[author]
 
-        if len(msgs) == 6 and len(set(msgs)) == 1:
+        if len(msgs) == 3 and len(set(msgs)) == 1:
             try:
                 ysch = self.bot.get_user(1044589526116470844)
                 invitechannel = guild.get_channel(605035182143176711)
                 modchannel = guild.get_channel(970972545564168232)
-                await modchannel.send(f"已踢出 <@{author.id}> 并通知其修改密码.")
+                await modchannel.send(f"解析Automod动作: 已踢出 <@{author.id}> 并通知其修改密码.")
                 await self.repeattosoftban(guild, ysch, invitechannel, author, "[自动]多次重复内容轰炸")
-
+                guild_cache.clear()
                 log.warning(
                         "已移除用户 ({member}) 在 {guild}".format(
                             member=author.id, guild=guild.id
@@ -335,15 +364,15 @@ class Events(MixinMeta):
                             await message.delete()
                             break
             except ValueError:
-                log.info("无法解析JSON结果。")
+                log.info("BIO-无法解析JSON结果。")
                 ntfcnsec = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
-                await ntfcnsec.send("Bio解析模块疑似故障")
+                await ntfcnsec.send("Bio解析模块疑似故障-json解析失败")
 
         else:
-            log.info(f"请求失败: {response.status_code}")
+            log.info(f"BIO请求失败: {response.status_code}")
             log.info(response.text)
             ntfcnsec = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
-            await ntfcnsec.send("Bio解析模块疑似故障")
+            await ntfcnsec.send(f"Bio解析模块疑似故障-HTTP ERROR:{response.status_code}")
 
 
     async def check_hidelinks(self, message: discord.Message):
@@ -558,7 +587,9 @@ class Events(MixinMeta):
 
     @commands.Cog.listener()
     async def on_automod_action(self, execution):
-        await self.check_duplicates_automod(execution)
+        detected = await self.check_duplicates_automod(execution)
+        if not detected:
+            await self.ckeck_automod_content(execution)
  
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -567,6 +598,9 @@ class Events(MixinMeta):
             return
 
         if await self.bot.cog_disabled_in_guild(self, message.guild):
+            return
+        
+        if message.channel.id == 970972545564168232: #绕过mod-only
             return
 
         valid_user = isinstance(author, discord.Member) and not author.bot

@@ -419,6 +419,8 @@ class Events(MixinMeta):
                     if decoded_objects:
                         for obj in decoded_objects:
                             qr_code_data = obj.data.decode("utf-8")
+                            if qr_code_data == "":
+                                continue
                             if "wxp://" in qr_code_data or "qr.alipay.com" in qr_code_data:
                                 await message.delete()
                                 await message.channel.send("检测到微信/支付宝收款码,已撤回.本群禁止金钱交易.请勿扫码付款,存在诈骗风险.")
@@ -444,7 +446,7 @@ class Events(MixinMeta):
                                 await message.channel.send("识别到疑似Discord登录二维码,已撤回! 请勿扫码付款,存在盗号风险!")
                                 await ntfcn.send(f"{message.author.mention}的消息中存在疑似Discord登录二维码. \n 二维码链接:{qr_code_data}")
                                 continue
-                            await message.channel.send(f"检测到二维码,已完成内容识别：{qr_code_data}")
+                            await message.channel.send(f"检测到二维码,已完成内容识别：{qr_code_data} 警告：正常聊天不需要用到二维码。二维码通常用于隐藏网址。为保护您的个人利益，规避隐私和法律风险，请勿分享登录信息或帮助验证。发送存在登录或验证二维码者请主动撤回。否则将被禁言！")
                     img.close()
                     os.remove(f"/home/sch/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")        
                 count_mk += 1

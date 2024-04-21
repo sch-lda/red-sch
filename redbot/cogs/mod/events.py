@@ -420,7 +420,7 @@ class Events(MixinMeta):
                         for obj in decoded_objects:
                             qr_code_data = obj.data.decode("utf-8")
                             if qr_code_data == "":
-                                continue
+                                continue 
                             if "wxp://" in qr_code_data or "qr.alipay.com" in qr_code_data:
                                 await message.delete()
                                 await message.channel.send("检测到微信/支付宝收款码,已撤回.本群禁止金钱交易.请勿扫码付款,存在诈骗风险.")

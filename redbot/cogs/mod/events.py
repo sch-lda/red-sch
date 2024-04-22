@@ -347,7 +347,7 @@ class Events(MixinMeta):
                     keywords_to_exclude = [
                 '招代理', '购买', '招辅助代理', '辅助代理商', 'reseller','Reseller', '中国经销',
                 '中国总经销', '官方经销', '总经销', '代理', '官方总代', '诚招合作', '加盟','誠信',
-                '一起赚钱', '转售菜单', '转售辅助', '中国卖家', '入代私聊', '科技代理商',' 代理', '經銷', '低價',
+                '一起赚钱', '转售菜单', '转售辅助', '中国卖家', '入代私聊', '科技代理商',' 代理', '經銷', '低價', 'gta5辅助', 'gta5菜单', 'gta5外挂', 'gta5模组', 'gta辅助', 'gta菜单', 'gta外挂', 'gta模组', '卖gta', '销售', 'Gta5辅助', 'Gta5菜单', 'Gta5外挂', 'Gta5模组', 'Gta辅助', 'Gta菜单', 'Gta外挂', 'Gta模组', '卖Gta', 'GTA5辅助', 'GTA5菜单', 'GTA5外挂', 'GTA5模组', 'GTA辅助', 'GTA菜单', 'GTA外挂', 'GTA模组', '卖GTA'
                 'Shop', 'Cheapest', 'Store','shop', 'cheapest', 'store', '商业合作', 'Titan', 'Erebus', 'discord.gg', 'discord.com'
                 ]
                     for keyword in keywords_to_exclude:

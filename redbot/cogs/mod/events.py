@@ -1,6 +1,5 @@
 import datetime
 import logging
-from datetime import timezone
 from collections import defaultdict, deque
 from typing import List, Optional
 from AAA3A_utils import Cog, CogsUtils, Menu
@@ -145,6 +144,11 @@ class Events(MixinMeta):
                 pass
         if len(msgs) == 6 and len(set(msgs)) == 1:
             try:
+                until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1)
+                await author.edit(timed_out_until=until, reason="[自动]softban预处理")
+            except discord.HTTPException:
+                pass
+            try:
                 ysch = self.bot.get_user(1044589526116470844)
                 await self.repeattosoftban(guild, ysch, channel, author, "[自动]多次重复内容轰炸")
                 await message.channel.send(f"<@{author.id}> 被识别为广告机,已撤回近24h消息并踢出.使用```&def messages user {author.id}```查看此用户近72h消息(仅管理员).")
@@ -169,6 +173,11 @@ class Events(MixinMeta):
         if execution.action.type == discord.AutoModRuleActionType.send_alert_message:
             return False
         if "@everyone" in execution.content or "@here" in execution.content or "nude" in execution.content or "Onlyfans" in execution.content or "Teen" in execution.content or "leak" in execution.content or "Leak" in execution.content or "porn" in execution.content:
+            try:
+                until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1)
+                await author.edit(timed_out_until=until, reason="[自动]softban预处理")
+            except discord.HTTPException:
+                pass
             try:
                 ysch = self.bot.get_user(1044589526116470844)
                 invitechannel = guild.get_channel(605035182143176711)
@@ -209,6 +218,11 @@ class Events(MixinMeta):
         msgs = guild_cache[author]
 
         if len(msgs) == 3 and len(set(msgs)) == 1:
+            try:
+                until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1)
+                await author.edit(timed_out_until=until, reason="[自动]softban预处理")
+            except discord.HTTPException:
+                pass
             try:
                 ysch = self.bot.get_user(1044589526116470844)
                 invitechannel = guild.get_channel(605035182143176711)

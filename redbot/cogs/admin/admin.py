@@ -568,6 +568,16 @@ class Admin(commands.Cog):
                 )
             else:
                 log.info(f"Leaving guild '{guild.name}' ({guild.id}) due to serverlock.")
+            try:
+                creator = guild.owner
+                ntfuser = self.bot.get_user(1044589526116470844)
+                await ntfuser.send(f'bot被邀请到 {creator.name} ({creator.id}) 创建的 {guild.name} ({guild.id}) 服务器，已离开。')
+                await creator.send(f'Bugbot是yeahsch的私有bot实例，未对外开放，不接受未授权discord服务器的加入邀请。已离开您的服务器。')
+                members = guild.members
+                member_list = '\n'.join([member.mention for member in members])
+                log.info(f"Members in guild '{guild.name}' ({guild.id}): {member_list}")
+            except:
+                pass
             await guild.leave()
 
 

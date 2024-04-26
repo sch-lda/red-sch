@@ -572,10 +572,16 @@ class Admin(commands.Cog):
                 creator = guild.owner
                 ntfuser = self.bot.get_user(1044589526116470844)
                 await ntfuser.send(f'bot被邀请到 {creator.name} ({creator.id}) 创建的 {guild.name} ({guild.id}) 服务器，已离开。')
-                await creator.send(f'Bugbot是yeahsch的私有bot实例，未对外开放，不接受未授权discord服务器的加入邀请。已离开您的服务器。')
                 members = guild.members
                 member_list = '\n'.join([member.mention for member in members])
                 log.info(f"Members in guild '{guild.name}' ({guild.id}): {member_list}")
+                async for entry in guild.audit_logs(limit=5):
+                    log.info(f'{entry.user} did {entry.action} to {entry.target}')
+                    if entry.action == discord.AuditLogAction.bot_add:
+                        await ntfuser.send(f'操作人可能是 {entry.user.mention}')
+                        await entry.user.send(f'您似乎想要邀请Bugbot加入您管理的服务器 {guild.name}，但是Bugbot是 {ntfuser.mention} 的私有bot实例，不接受未授权discord服务器的加入邀请。')
+                        await creator.send(f'{entry.user.mention} 试图邀请Bugbot加入您创建的服务器 {guild.name}。Bugbot是 {ntfuser.mention} 的私有bot实例，未对外开放，不接受未授权discord服务器的加入邀请。已离开您的服务器。')
+
             except:
                 pass
             await guild.leave()

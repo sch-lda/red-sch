@@ -607,6 +607,10 @@ class Events(MixinMeta):
             await self.ckeck_automod_content(execution)
  
     @commands.Cog.listener()
+    async def on_message_edit(self, _prior, message):
+        await self.on_message(message)
+
+    @commands.Cog.listener()
     async def on_message(self, message):
         author = message.author
         if message.guild is None or self.bot.user == author:

@@ -15,6 +15,9 @@ from pyzbar import pyzbar
 import os
 import asyncio
 import tldextract
+import multiprocessing
+import time
+import threading
 
 _ = i18n.Translator("Mod", __file__)
 log = logging.getLogger("red.mod")
@@ -467,7 +470,6 @@ class Events(MixinMeta):
     async def checkurl(self, message: discord.Message):
         guildid = message.guild.id
 
-
         if "weixin110.qq.com" in message.content or "weixin.qq.com/g" in message.content or "u.wechat.com" in message.content or "jq.qq.com" in message.content or "qm.qq.com" in message.content or "group_code" in message.content or "qr.alipay.com" in message.content or "wxp://" in message.content or "discord.com/ra/" in message.content:
             await message.delete()
             await message.channel.send("检测可疑的链接,已撤回!")
@@ -477,7 +479,7 @@ class Events(MixinMeta):
             return True
         return False
     
-    async def VT_file_scan(self, file_path):
+    async def VT_file_scan(self, file_path, message: discord.Message):
         VT_key = await self.bot.get_shared_api_tokens("virustotal")
         if VT_key.get("apikey") is None:
             return
@@ -495,24 +497,65 @@ class Events(MixinMeta):
             url = f'https://www.virustotal.com/api/v3/analyses/{aid}'
             headers = {'x-apikey': VT_key.get("apikey")}
 
-            while True:
-                response2 = requests.get(url, headers=headers)
+            thread2 = threading.Thread(target=self.call_async_VT_file_scan, args=(url, message))
+            thread2.start()
+        return
 
+    
+    def call_async_VT_url_scan(self, susurl, message: discord.Message):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(self.VT_url_scan(susurl, message))
+
+    def call_async_VT_file_scan(self, surl, message: discord.Message):
+        loop2 = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop2)
+        loop2.run_until_complete(self.VT_file_scan_rlt(surl, message))
+
+    async def VT_file_scan_rlt(self, url, message: discord.Message,):
+            VT_key = await self.bot.get_shared_api_tokens("virustotal")
+            if VT_key.get("apikey") is None:
+                return
+            headers = {'x-apikey': VT_key.get("apikey")}
+
+            i = 30
+            while i > 0:
+                i = i - 1
+                response2 = requests.get(url, headers=headers)
+                
                 if response2.status_code == 200:
                     json_response2 = response2.json()
-
                     statusdata = json_response2['data']['attributes']['status']
                     if statusdata == 'completed':
                         break
-                await asyncio.sleep(8)
-
-            analysdata = json_response2['data']
-            if analysdata['attributes']['stats']['malicious'] >= 0 or analysdata['attributes']['stats']['suspicious'] >= 0:
+                await asyncio.sleep(15)
+            if i <= 0:
+                return
             
-                return [analysdata['attributes']['stats']['malicious'], analysdata['attributes']['stats']['suspicious'], analysdata['attributes']['stats']['harmless']]
-        return [100,100]
+            analysdata = json_response2['data']
+            harmc = analysdata['attributes']['stats']['malicious']
+            susc = analysdata['attributes']['stats']['suspicious']
+            noharmc = analysdata['attributes']['stats']['harmless']
+            if harmc >= 0 or susc >= 0:
+                bot_key = await self.bot.get_shared_api_tokens("bugbot")
+                if bot_key.get("api_key") is None:
+                    return
+                restapi_sendmsg = f'https://discord.com/api/v9/channels/{message.channel.id}/messages'
 
-    async def VT_url_scan(self, susurl):
+                data = {
+                    'content': str(f'{message.author.mention}的消息中存在可疑文件,经VirusTotal在线查毒, {harmc} 个引擎标记为病毒, {susc} 个引擎标记为可疑, {noharmc} 个引擎未检出异常. 结果仅供参考.'),
+                }
+
+                headers = {
+                    'Authorization': f'Bot {bot_key.get("api_key")}',
+                    'Content-Type': 'application/json',
+                }        
+                httprlt = requests.post(restapi_sendmsg, json=data, headers=headers)
+            return
+            
+
+    async def VT_url_scan(self, susurl, message: discord.Message):
+
         VT_key = await self.bot.get_shared_api_tokens("virustotal")
         if VT_key.get("apikey") is None:
             return
@@ -529,8 +572,10 @@ class Events(MixinMeta):
 
             url = f'https://www.virustotal.com/api/v3/analyses/{aid}'
             headers = {'x-apikey': VT_key.get("apikey")}
+            i = 5
+            while i > 0:
 
-            while True:
+                i = i - 1
                 response2 = requests.get(url, headers=headers)
 
                 if response2.status_code == 200:
@@ -538,12 +583,32 @@ class Events(MixinMeta):
                     statusdata = json_response2['data']['attributes']['status']
                     if statusdata == 'completed':
                         break
-                await asyncio.sleep(8)
 
+                await asyncio.sleep(15)
+            
+            if i <= 0:
+                return
+            
             analysdata = json_response2['data']
-            if analysdata['attributes']['stats']['malicious'] >= 0 or analysdata['attributes']['stats']['suspicious'] >= 0:            
-                return [analysdata['attributes']['stats']['malicious'], analysdata['attributes']['stats']['suspicious'], analysdata['attributes']['stats']['harmless']]
-        return [100,100]
+            harmc = analysdata['attributes']['stats']['malicious']
+            susc = analysdata['attributes']['stats']['suspicious']
+            noharmc = analysdata['attributes']['stats']['harmless']
+            if harmc > 0 or susc > 0:            
+                bot_key = await self.bot.get_shared_api_tokens("bugbot")
+                if bot_key.get("api_key") is None:
+                    return
+                restapi_sendmsg = f'https://discord.com/api/v9/channels/{message.channel.id}/messages'
+
+                data = {
+                    'content': str(f'{message.author.mention}的消息中存在可疑链接,经VirusTotal在线查毒, {harmc} 个引擎标记为病毒, {susc} 个引擎标记为可疑, {noharmc} 个引擎未检出异常. 结果仅供参考.'),
+                }
+
+                headers = {
+                    'Authorization': f'Bot {bot_key.get("api_key")}',
+                    'Content-Type': 'application/json',
+                }        
+                requests.post(restapi_sendmsg, json=data, headers=headers)
+        return
 
 
     async def filesafecheck(self, message: discord.Message):
@@ -559,14 +624,7 @@ class Events(MixinMeta):
                         os.remove(file_path)
                         return
             
-                    detectcount = await self.VT_file_scan(file_path)
-                    if detectcount[0] == 100:
-                        # await message.channel.send(f'警告：文件 {attachment.filename} 病毒扫描失败！')
-                        return
-                    if detectcount[0] > 0 and detectcount[0] < 10:
-                        await message.channel.send(f'{message.author.mention}上传的文件{attachment.filename}经VirusTotal在线查毒，{detectcount[0]} 个引擎标记为病毒, 判定为低风险. 结果仅供参考.')
-                    if detectcount[0] >= 10 :
-                        await message.channel.send(f'{message.author.mention}上传的文件{attachment.filename}经VirusTotal在线查毒，{detectcount[0]} 个引擎标记为病毒, 判定为中高风险. 结果仅供参考.')
+                    await self.VT_file_scan(file_path, message)
     
     async def urlsafecheck(self, message: discord.Message):
                 content = message.content
@@ -580,12 +638,8 @@ class Events(MixinMeta):
                     domain = domainpre + "." + suffix
                     if domain == "github.com" or domain == "youtube.com" or domain == "youtu.be" or domain == "bilibili.com" or domain == "b23.tv" or domain == "githubusercontent.com" or domain == "discord.com" or domain == "discord.gg" or domain == "123pan.com" or domain == "host3650.live" or domain == "microsoft.com" or domain == "unknowncheats" or domain == "wikipedia.org" or domain == "vxtwitter.com" or domain == "twitter.com" or domain == "x.com" or domain == "crazyzhang.cn" or domain == "discordapp.com":
                         continue
-                    detectcount = await self.VT_url_scan(url)
-                    if detectcount[0] == 100:
-                        # await message.channel.send(f'警告：网址 安全扫描失败！')
-                        return
-                    if detectcount[0] > 0:
-                        await message.channel.send(f'{message.author.mention}发送的网址经VirusTotal在线扫描，{detectcount[0]} 个引擎标记为病毒, {detectcount[1]} 个引擎标记为可疑, {detectcount[2]} 个引擎标记为安全. 结果仅供参考.')
+                    thread1 = threading.Thread(target=self.call_async_VT_url_scan, args=(url, message))
+                    thread1.start()
 
     async def check_ping_everyone_here(self, message: discord.Message):
         if "@everyone" in message.content or "@here" in message.content:
@@ -645,9 +699,9 @@ class Events(MixinMeta):
                 if not deleted:
                     await self.decodeqr(message)
                     deleted = await self.checkurl(message)
-                    # if not deleted:
-                    #     await self.urlsafecheck(message)
-                    #     await self.filesafecheck(message)
+                    if not deleted:
+                        await self.urlsafecheck(message)
+                        await self.filesafecheck(message)
 
     @staticmethod
     def _update_past_names(name: str, name_list: List[Optional[str]]) -> None:

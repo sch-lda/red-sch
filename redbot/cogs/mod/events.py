@@ -536,7 +536,7 @@ class Events(MixinMeta):
             harmc = analysdata['attributes']['stats']['malicious']
             susc = analysdata['attributes']['stats']['suspicious']
             noharmc = analysdata['attributes']['stats']['harmless']
-            if harmc >= 0 or susc >= 0:
+            if harmc > 0 or susc > 0:
                 bot_key = await self.bot.get_shared_api_tokens("bugbot")
                 if bot_key.get("api_key") is None:
                     return
@@ -617,7 +617,7 @@ class Events(MixinMeta):
                     file_path = f'/home/sch/bot_tmp/atc/{attachment.filename}'
                     if attachment.content_type == None:
                         return
-                    if attachment.content_type.startswith("image") or attachment.content_type.startswith("text"):
+                    if attachment.content_type.startswith("image") or attachment.content_type.startswith("text") or attachment.content_type.startswith("audio") or attachment.content_type.startswith("video"):
                         return
                     await attachment.save(file_path)
                     if os.path.getsize(file_path) > 30 * 1024 * 1024:
@@ -697,7 +697,7 @@ class Events(MixinMeta):
             if not deleted:
                 deleted = await self.check_ping_everyone_here(message)
                 if not deleted:
-                    await self.decodeqr(message)
+                    # await self.decodeqr(message)
                     deleted = await self.checkurl(message)
                     if not deleted:
                         await self.urlsafecheck(message)

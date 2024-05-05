@@ -146,7 +146,8 @@ class Events(MixinMeta):
                 pass
         if len(msgs) == 6 and len(set(msgs)) == 1:
             try:
-                until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1)
+                msgs.clear()
+                until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
                 await author.edit(timed_out_until=until, reason="[自动]softban预处理")
             except discord.HTTPException:
                 pass
@@ -154,7 +155,6 @@ class Events(MixinMeta):
                 ysch = self.bot.get_user(1044589526116470844)
                 await self.repeattosoftban(guild, ysch, channel, author, "[自动]多次重复内容轰炸")
                 await message.channel.send(f"<@{author.id}> 被识别为广告机,已撤回近24h消息并踢出.使用```&def messages user {author.id}```查看此用户近72h消息(仅管理员).")
-                guild_cache.clear()
                 log.warning(
                         "已移除用户 ({member}) 在 {guild}".format(
                             member=author.id, guild=guild.id
@@ -165,27 +165,48 @@ class Events(MixinMeta):
                 pass
 
         return False
+    
     async def ckeck_automod_content(self, execution):
         guild = execution.guild
-        if guild.id != 388227343862464513:
-            return False
         author = execution.member
         if not "discord" in execution.content:
             return False
         if execution.action.type == discord.AutoModRuleActionType.send_alert_message:
             return False
+        
+        mod_cache = self.cache_mod.get(guild.id, None)
+
+        if mod_cache is None:
+            mod_cache = self.cache_mod[guild.id] = defaultdict(lambda: deque(maxlen=6))
+            
+        modmsgs = mod_cache[author]
+        if len(modmsgs) > 0:
+            log.info(f"限速锁定未解除锁定 {len(modmsgs)}")
+            return False
         if "@everyone" in execution.content or "@here" in execution.content or "nude" in execution.content or "Onlyfans" in execution.content or "Teen" in execution.content or "leak" in execution.content or "Leak" in execution.content or "porn" in execution.content:
+            mod_cache[author].append(execution.content)
+            log.info(f"限速锁定已锁定 {len(modmsgs)}")
+
             try:
-                until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1)
+                until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
                 await author.edit(timed_out_until=until, reason="[自动]softban预处理")
             except discord.HTTPException:
                 pass
+            if guild.id != 388227343862464513:
+                mod_cache[author].clear()
+                log.info(f"限速锁定解除 {len(modmsgs)}")
+
+                return False
+
             try:
                 ysch = self.bot.get_user(1044589526116470844)
                 invitechannel = guild.get_channel(605035182143176711)
                 modchannel = guild.get_channel(970972545564168232)
                 await modchannel.send(f"解析Automod动作+关键词检测: 已踢出 <@{author.id}> 并通知其修改密码.")
                 await self.repeattosoftban(guild, ysch, invitechannel, author, "[自动]Automod综合检测")
+                mod_cache[author].clear()
+                log.info(f"限速锁定解除 {len(modmsgs)}")
+
                 log.warning(
                         "已移除用户 ({member}) 在 {guild}".format(
                             member=author.id, guild=guild.id
@@ -221,7 +242,8 @@ class Events(MixinMeta):
 
         if len(msgs) == 3 and len(set(msgs)) == 1:
             try:
-                until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1)
+                msgs.clear()
+                until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
                 await author.edit(timed_out_until=until, reason="[自动]softban预处理")
             except discord.HTTPException:
                 pass
@@ -231,7 +253,6 @@ class Events(MixinMeta):
                 modchannel = guild.get_channel(970972545564168232)
                 await modchannel.send(f"解析Automod动作: 已踢出 <@{author.id}> 并通知其修改密码.")
                 await self.repeattosoftban(guild, ysch, invitechannel, author, "[自动]多次重复内容轰炸")
-                guild_cache.clear()
                 log.warning(
                         "已移除用户 ({member}) 在 {guild}".format(
                             member=author.id, guild=guild.id

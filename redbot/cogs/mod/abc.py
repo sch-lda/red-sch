@@ -17,6 +17,7 @@ class MixinMeta(ABC):
         self.config: Config
         self.bot: Red
         self.cache: dict
+        self.cache_mod: dict
 
     @staticmethod
     @abstractmethod

@@ -42,12 +42,14 @@ class Events(MixinMeta):
             invitelink = await channel.create_invite(max_uses=1)
             msg = await member.send(
                 _(
-                    "你已被踢出,最近一天的消息已被删除."
-                    "这通常是因为你的账号在群组内发送广告被自动化程序判定为广告机器人账号.\n"
+                    "你已被踢出,最近一天的消息已被删除.\n"
+                    "您的账号被Bugbot判定为广告机器人账号，判定原因: {banreson}\n"
+                    "如果您对自己在此群组发送消息这件事完全不知情,那么您的Discord账号已经被黑客控制\n"
                     "请检查账号状态并修改密码以排除盗号隐患.之后你可以通过此链接重新加入server. {invitelink}"
-                ).format(invitelink=invitelink.url),
+                ).format(invitelink=invitelink.url, banreson=reason),
             )
         except discord.HTTPException:
+
             msg = None
         try:
             await guild.ban(member, reason=audit_reason, delete_message_seconds=86400)
@@ -145,23 +147,39 @@ class Events(MixinMeta):
             except discord.HTTPException:
                 pass
         if len(msgs) == 6 and len(set(msgs)) == 1:
+            mod_cache = self.cache_mod.get(guild.id, None)
+            if mod_cache is None:
+                mod_cache = self.cache_mod[guild.id] = defaultdict(lambda: deque(maxlen=6))
+            modmsgs = mod_cache[message.author]
+            if len(modmsgs) > 0:
+                log.info(f"限速锁定未解除锁定 {len(modmsgs)}")
+                await message.delete()
+                return False
+                
+            mod_cache[message.author].append("locked")
+            msgs.clear()
             try:
-                msgs.clear()
                 until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
                 await author.edit(timed_out_until=until, reason="[自动]softban预处理")
             except discord.HTTPException:
+                mod_cache[author].clear()
                 pass
             try:
                 ysch = self.bot.get_user(1044589526116470844)
-                await self.repeattosoftban(guild, ysch, channel, author, "[自动]多次重复内容轰炸")
-                await message.channel.send(f"<@{author.id}> 被识别为广告机,已撤回近24h消息并踢出.使用```&def messages user {author.id}```查看此用户近72h消息(仅管理员).")
+                await self.repeattosoftban(guild, ysch, channel, author, "[自动]连续发送六条内容相同的消息")
+                if guild.id == 388227343862464513:
+                    ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
+                    await ntfcn.send(f"<@{author.id}>  ({message.author.nick}) 被识别为广告机,已撤回近24h消息并踢出.\n判断原因:连续发送六条内容相同的消息\n最近一条消息为```{message.content}```")
+                
                 log.warning(
                         "已移除用户 ({member}) 在 {guild}".format(
                             member=author.id, guild=guild.id
                         )
                     )
+                mod_cache[author].clear()
                 return True
             except discord.HTTPException:
+                mod_cache[author].clear()
                 pass
 
         return False
@@ -203,7 +221,7 @@ class Events(MixinMeta):
                 invitechannel = guild.get_channel(605035182143176711)
                 modchannel = guild.get_channel(970972545564168232)
                 await modchannel.send(f"解析Automod动作+关键词检测: 已踢出 <@{author.id}> 并通知其修改密码.")
-                await self.repeattosoftban(guild, ysch, invitechannel, author, "[自动]Automod综合检测")
+                await self.repeattosoftban(guild, ysch, invitechannel, author, "[自动]同时触发Doscord Automod+关键词黑名单识别")
                 mod_cache[author].clear()
                 log.info(f"限速锁定解除 {len(modmsgs)}")
 
@@ -220,13 +238,22 @@ class Events(MixinMeta):
 
     async def check_duplicates_automod(self, execution):
 
+
         guild = execution.guild
         if guild.id != 388227343862464513:
             return False
         if execution.action.type == discord.AutoModRuleActionType.send_alert_message:
             return False
-
         author = execution.member
+
+        mod_cache = self.cache_mod.get(guild.id, None)
+        if mod_cache is None:
+            mod_cache = self.cache_mod[guild.id] = defaultdict(lambda: deque(maxlen=6))
+            modmsgs = mod_cache[author]
+            if len(modmsgs) > 0:
+                log.info(f"限速锁定未解除锁定 {len(modmsgs)}")
+                return False
+
         guild_cache = self.cache.get(guild.id, None)
         if guild_cache is None:
             repeats = await self.config.guild(guild).delete_repeats()
@@ -241,18 +268,24 @@ class Events(MixinMeta):
         msgs = guild_cache[author]
 
         if len(msgs) == 3 and len(set(msgs)) == 1:
+            mod_cache[author].append("locked")
+
             try:
                 msgs.clear()
                 until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
                 await author.edit(timed_out_until=until, reason="[自动]softban预处理")
             except discord.HTTPException:
+                mod_cache[author].clear()
                 pass
             try:
                 ysch = self.bot.get_user(1044589526116470844)
                 invitechannel = guild.get_channel(605035182143176711)
                 modchannel = guild.get_channel(970972545564168232)
                 await modchannel.send(f"解析Automod动作: 已踢出 <@{author.id}> 并通知其修改密码.")
-                await self.repeattosoftban(guild, ysch, invitechannel, author, "[自动]多次重复内容轰炸")
+                await self.repeattosoftban(guild, ysch, invitechannel, author, "[自动]累计三次触发Discord Automod关键词拦截")
+                log.info(f"限速锁定解除 {len(modmsgs)}")
+                mod_cache[author].clear()
+
                 log.warning(
                         "已移除用户 ({member}) 在 {guild}".format(
                             member=author.id, guild=guild.id
@@ -260,6 +293,7 @@ class Events(MixinMeta):
                     )
                 return True
             except discord.HTTPException:
+                mod_cache[author].clear()
                 pass
 
         return False
@@ -426,6 +460,33 @@ class Events(MixinMeta):
                 domain = domainpre + "." + suffix
                 if domain == "discordapp.com":
                     return
+                
+            if "steamcommunity.com/gift" or "from steam" in message.content:
+                mod_cache = self.cache_mod.get(guildid, None)
+                if mod_cache is None:
+                    mod_cache = self.cache_mod[guildid] = defaultdict(lambda: deque(maxlen=6))
+                modmsgs = mod_cache[message.author]
+                if len(modmsgs) > 0:
+                    log.info(f"限速锁定未解除锁定 {len(modmsgs)}")
+                    await message.delete()
+                    return False
+                
+                mod_cache[message.author].append("locked")
+                try:
+                    until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=30)
+                    await message.author.edit(timed_out_until=until, reason="[自动]softban预处理")
+                    await message.channel.send(f"{message.author.mention} 被判定为广告机(steam礼品卡诈骗),已踢出.天上没有馅饼,推广免费礼物、nitro、18+内容的均为诈骗.勿填写勿扫码.")
+                    ysch = self.bot.get_user(1044589526116470844)
+                    await self.repeattosoftban(message.guild, ysch, message.channel, message.author, "[自动]发送盗号链接(steam礼品卡)")
+                    if guildid == 388227343862464513:
+                        ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
+                        await ntfcn.send(f"<@{message.author.id}>  ({message.author.nick}) 被识别为广告机,已撤回近24h消息并踢出.\n判断原因:steam礼品卡诈骗链接\n当前消息快照:```{message.content}```")
+
+                except discord.HTTPException:
+                    pass
+                log.info(f"限速锁定解除 {len(modmsgs)}")
+                mod_cache[message.author].clear()
+                return True
 
             await message.delete()
             await message.channel.send(f'{message.author.mention} 请勿使用markdown语法隐藏真实网址,原始消息已私发给您,请重新编辑', delete_after=60)
@@ -435,7 +496,7 @@ class Events(MixinMeta):
                 pass
             if guildid == 388227343862464513:
                 ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
-                await ntfcn.send(f"{message.author.mention}的消息中存在使用Markdown语法隐藏的网址. \n 当前消息快照:```{message.content}```")
+                await ntfcn.send(f"{message.author.mention} ({message.author.nick}) 的消息中存在使用Markdown语法隐藏的网址. \n 当前消息快照:```{message.content}```")
             return True
         return False
 

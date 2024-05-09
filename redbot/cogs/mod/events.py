@@ -43,13 +43,14 @@ class Events(MixinMeta):
                 invitelink = "https://discord.gg/7GuNzajfhD"
             else:
                 invitelink = await channel.create_invite(max_uses=1)
+                invitelink = invitelink.url
             msg = await member.send(
                 _(
                     "你已被踢出,最近一天的消息已被删除.\n"
                     "您的账号被Bugbot判定为广告机器人账号，判定原因: {banreson}\n"
                     "如果您对自己在此群组发送消息这件事完全不知情,那么您的Discord账号已经被黑客控制\n"
                     "请检查账号状态并修改密码以排除盗号隐患.之后你可以通过此链接重新加入server. {invitelink}"
-                ).format(invitelink=invitelink.url, banreson=reason),
+                ).format(invitelink=invitelink, banreson=reason),
             )
         except discord.HTTPException:
 

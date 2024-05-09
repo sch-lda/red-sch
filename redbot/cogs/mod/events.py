@@ -39,7 +39,10 @@ class Events(MixinMeta):
         audit_reason = get_audit_reason(author, reason, shorten=True)
 
         try:  # We don't want blocked DMs preventing us from banning
-            invitelink = await channel.create_invite(max_uses=1)
+            if guild.id == 388227343862464513:
+                invitelink = "https://discord.gg/7GuNzajfhD"
+            else:
+                invitelink = await channel.create_invite(max_uses=1)
             msg = await member.send(
                 _(
                     "你已被踢出,最近一天的消息已被删除.\n"

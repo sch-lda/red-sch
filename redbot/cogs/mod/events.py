@@ -241,8 +241,6 @@ class Events(MixinMeta):
 
 
     async def check_duplicates_automod(self, execution):
-
-
         guild = execution.guild
         if guild.id != 388227343862464513:
             return False
@@ -253,10 +251,10 @@ class Events(MixinMeta):
         mod_cache = self.cache_mod.get(guild.id, None)
         if mod_cache is None:
             mod_cache = self.cache_mod[guild.id] = defaultdict(lambda: deque(maxlen=6))
-            modmsgs = mod_cache[author]
-            if len(modmsgs) > 0:
-                log.info(f"限速锁定未解除锁定 {len(modmsgs)}")
-                return False
+        modmsgs = mod_cache[author]
+        if len(modmsgs) > 0:
+            log.info(f"限速锁定未解除锁定 {len(modmsgs)}")
+            return False
 
         guild_cache = self.cache.get(guild.id, None)
         if guild_cache is None:

@@ -482,7 +482,7 @@ class Events(MixinMeta):
                     await self.repeattosoftban(message.guild, ysch, message.channel, message.author, "[自动]发送盗号链接(steam礼品卡)")
                     if guildid == 388227343862464513:
                         ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
-                        await ntfcn.send(f"<@{message.author.id}>  ({message.author.name}) 被识别为广告机,已撤回近24h消息并踢出.\n判断原因:steam礼品卡诈骗链接\n当前消息快照:```{message.content}```")
+                        await ntfcn.send(f"<@{message.author.id}>  ({message.author.name}) 被识别为广告机,已撤回近24h消息并踢出.\n判断原因:steam礼品卡诈骗链接 \n频道:{message.channel.mention}\n当前消息快照:```{message.content}```")
 
                 except discord.HTTPException:
                     pass
@@ -498,7 +498,7 @@ class Events(MixinMeta):
                 pass
             if guildid == 388227343862464513:
                 ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
-                await ntfcn.send(f"{message.author.mention} ({message.author.name}) 的消息中存在使用Markdown语法隐藏的网址. \n 当前消息快照:```{message.content}```")
+                await ntfcn.send(f"{message.author.mention} ({message.author.name}) 的消息中存在使用Markdown语法隐藏的网址. \n频道:{message.channel.mention}\n当前消息快照:```{message.content}```")
             return True
         return False
 

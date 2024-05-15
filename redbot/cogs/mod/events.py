@@ -746,7 +746,38 @@ class Events(MixinMeta):
  
     @commands.Cog.listener()
     async def on_message_edit(self, _prior, message):
-        await self.on_message(message)
+        author = message.author
+        if message.guild is None or self.bot.user == author:
+            return
+
+        if await self.bot.cog_disabled_in_guild(self, message.guild):
+            return
+        
+        if message.channel.id == 970972545564168232: #绕过mod-only
+            return
+
+        valid_user = isinstance(author, discord.Member) and not author.bot
+        if not valid_user:
+            return
+
+        #  Bots and mods or superior are ignored from the filter
+
+        # As are anyone configured to be
+        if await self.bot.is_automod_immune(message):
+            return
+
+        await i18n.set_contextual_locales_from_guild(self.bot, message.guild)
+
+        await self.check_mention_spam(message)
+        await self.muteadacc(message)
+        deleted = await self.check_hidelinks(message)
+        if not deleted:
+            deleted = await self.check_ping_everyone_here(message)
+            if not deleted:
+                deleted = await self.checkurl(message)
+                if not deleted:
+                    await self.urlsafecheck(message)
+                    await self.filesafecheck(message)
 
     @commands.Cog.listener()
     async def on_message(self, message):

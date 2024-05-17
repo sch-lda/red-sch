@@ -347,5 +347,5 @@ class ModInfo(MixinMeta):
     async def pfcomfsilence(self, ctx: commands.Context, *, member: discord.Member):
         """确认用户的个人介绍违规.(仅config)"""
         await self.config.user(member).iftrusted.set([])
-        await ctx.send(f"{member.mention}的个人介绍中可能存在广告行为,已被禁言,由管理员人工确认 \n如需取消禁言并信任此用户的个人介绍,请输入命令:&pftrust {member.id}")
+        await ctx.send(f"{member.mention}的个人介绍中可能存在广告行为,由管理员人工确认 \n如需取消禁言并信任此用户的个人介绍,请输入命令:&pftrust {member.id}")
 

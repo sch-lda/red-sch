@@ -343,4 +343,9 @@ class ModInfo(MixinMeta):
         await ctx.send(f"{member.mention}的个人介绍中可能存在广告行为,已被禁言,由管理员人工确认 \n如需取消禁言并信任此用户的个人介绍,请输入命令:&pftrust {member.id}")
         await member.send("您被识别为潜在的广告或垃圾账号,已被管理员人工禁言,不可申诉.")
 
+    @commands.command()
+    async def pfcomfsilence(self, ctx: commands.Context, *, member: discord.Member):
+        """确认用户的个人介绍违规.(仅config)"""
+        await self.config.user(member).iftrusted.set([])
+        await ctx.send(f"{member.mention}的个人介绍中可能存在广告行为,已被禁言,由管理员人工确认 \n如需取消禁言并信任此用户的个人介绍,请输入命令:&pftrust {member.id}")
 

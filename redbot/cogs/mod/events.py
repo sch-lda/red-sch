@@ -415,16 +415,16 @@ class Events(MixinMeta):
             try:
                 json_result = response.json()
                 bio = json_result.get('user', {}).get('bio')
-        
+
                 if bio:
                     keywords_to_include = [
-                '招代理', '购买', '招辅助代理', '辅助代理商', 'reseller','Reseller', '中国经销',
+                '招代理', '购买', '招辅助代理', '辅助代理商', 'reseller', '中国经销',
                 '中国总经销', '官方经销', '总经销', '代理', '官方总代', '诚招合作', '加盟','誠信',
-                '一起赚钱', '转售菜单', '转售辅助', '中国卖家', '入代私聊', '科技代理商',' 代理', '經銷', '低價', 'gta5辅助', 'gta5菜单', 'gta5外挂', 'gta5模组', 'gta辅助', 'gta菜单', 'gta外挂', 'gta模组', '卖gta', '销售', 'Gta5辅助', 'Gta5菜单', 'Gta5外挂', 'Gta5模组', 'Gta辅助', 'Gta菜单', 'Gta外挂', 'Gta模组', '卖Gta', 'GTA5辅助', 'GTA5菜单', 'GTA5外挂', 'GTA5模组', 'GTA辅助', 'GTA菜单', 'GTA外挂', 'GTA模组', '卖GTA'
-                'Shop', 'Cheapest', 'Store','shop', 'cheapest', 'store', '商业合作', 'Titan', 'Erebus', 'discord.gg', 'discord.com'
+                '一起赚钱', '转售菜单', '转售辅助', '中国卖家', '入代私聊', '科技代理商',' 代理', '經銷', '低價', 'gta5辅助', 'gta5菜单', 'gta5外挂', 'gta5模组', 'gta辅助', 'gta菜单', 'gta外挂', 'gta模组', '卖gta', '销售'
+                'shop', 'cheapest', 'store', 'cheapest', 'store', '商业合作', 'titan', 'erebus', 'discord.gg', 'discord.com'
                 ]
                     for keyword in keywords_to_include:
-                        if keyword in bio:
+                        if keyword in bio.lower():
                             muterole = message.guild.get_role(1058656520851697714)
                             await message.author.add_roles(muterole, reason="[自动]个人介绍:潜在的代理或经销商")
                             if guildid == 388227343862464513:

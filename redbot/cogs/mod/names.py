@@ -328,11 +328,13 @@ class ModInfo(MixinMeta):
         """信任用户的个人介绍."""
         async with self.config.user(member).iftrusted() as trusted:
             trusted.append(member.id)
-            
+            until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1)
+            await member.edit(timed_out_until=until, reason="重置Timeout")
+
             muterole = ctx.guild.get_role(1058656520851697714)
             await ctx.send(_("已解除禁言并排除对用户{usrname}的个人简介检测").format(usrname=member.name))
             await member.remove_roles(muterole, reason="解除可疑用户禁言")
-            await member.send("您已通过人工审核,现在可以正常发言了.对您造成的不便请谅解.")
+            await member.send("您已通过人工审核,稍后将可以正常发言,感谢您的等待.对您造成的不便请谅解.")
 
     @commands.command()
     async def pfcomf(self, ctx: commands.Context, *, member: discord.Member):
@@ -341,7 +343,7 @@ class ModInfo(MixinMeta):
         muterole = ctx.guild.get_role(1058656520851697714)
         await member.add_roles(muterole, reason="[自动]个人介绍:潜在的代理或经销商")
         await ctx.send(f"{member.mention}的个人介绍中可能存在广告行为,已被禁言,由管理员人工确认 \n如需取消禁言并信任此用户的个人介绍,请输入命令:&pftrust {member.id}")
-        await member.send("您被识别为潜在的广告或垃圾账号,已被管理员人工禁言,不可申诉.")
+        await member.send("您被识别为潜在的广告或垃圾账号,已由管理员人工审核确认,不可申诉.")
 
     @commands.command()
     async def pfcomfsilence(self, ctx: commands.Context, *, member: discord.Member):

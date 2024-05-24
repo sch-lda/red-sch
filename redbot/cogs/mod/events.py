@@ -415,27 +415,48 @@ class Events(MixinMeta):
             try:
                 json_result = response.json()
                 bio = json_result.get('user', {}).get('bio')
+                pronouns = json_result.get('user_profile', {}).get('pronouns')
 
-                if bio:
-                    keywords_to_include = [
-                '招代理', '购买', '招辅助代理', '辅助代理商', 'reseller', '中国经销',
+                log.info(f"Username: {message.author} Userid: {userid} Bio:{bio} Pronouns:{pronouns}")
+                keywords_to_include = [
+                '招代理', '购买', '招辅助代理', '辅助代理商', 'reseller', '中国经销','輔助','自喵','抽獎','抽奖','買東西','找我','cheat','gtaxmenu','ezmod','modz.com','hzmod','qlmenu','Q群', '🐧','nitro','stand-','便宜'
                 '中国总经销', '官方经销', '总经销', '代理', '官方总代', '诚招合作', '加盟','誠信',
                 '一起赚钱', '转售菜单', '转售辅助', '中国卖家', '入代私聊', '科技代理商',' 代理', '經銷', '低價', 'gta5辅助', 'gta5菜单', 'gta5外挂', 'gta5模组', 'gta辅助', 'gta菜单', 'gta外挂', 'gta模组', '卖gta', '销售'
-                'shop', 'cheapest', 'store', 'cheapest', 'store', '商业合作', 'titan', 'erebus', 'discord.gg', 'discord.com'
+                'shop', 'cheapest', 'store', 'cheapest', 'store', '商业合作', 'titan', '2take1', 'fikit', 'paypal', 'erebus', 'discord.gg', 'discord.com'
                 ]
+
+                if pronouns:
                     for keyword in keywords_to_include:
-                        if keyword in bio.lower():
-                            muterole = message.guild.get_role(1058656520851697714)
-                            await message.author.add_roles(muterole, reason="[自动]个人介绍:潜在的代理或经销商")
+                        if keyword in pronouns.lower():
+                            until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=72)
+                            await message.author.edit(timed_out_until=until, reason="[自动]pronouns潜在广告")
+
                             if guildid == 388227343862464513:
                                 ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
-                                await ntfcn.send(f"{message.author.mention}的个人介绍中可能存在广告行为,已被临时禁言,管理员请人工确认.\n 当前个人介绍快照:```{bio}``` \n如需取消禁言并信任此用户的个人介绍,请输入命令:```&pftrust {message.author.id}```")
+                                await ntfcn.send(f"{message.author.mention}的个人主页中可能存在广告行为,已被临时禁言,管理员请人工确认.\n当前pronouns快照:```{pronouns}``` \n当前Bio快照:```{bio}``` \n如需取消禁言并信任此用户的个人介绍,请输入命令:```&pftrust {message.author.id}```")
                             try:
-                                await message.author.send("经过对用户名/个人简介/消息的评估,您被识别为潜在的广告或垃圾账号,已被禁言,请等待管理员人工确认.如果您是付费菜单的经销商,我们默认您不需要在小助手群组中寻求帮助,为防止间接的广告行为,您可以继续浏览消息,但不再能够发送消息或添加反应.若您的业务范围不包含付费辅助或成人内容,通常经过人工审核后将解除禁言.")
+                                await message.author.send("经过对用户名/个人简介/消息的评估,您被识别为潜在的广告或垃圾账号,已被禁言并通知管理员人工审核,请耐心等待.若24小时内未处理,请主动联系管理员.如果您是付费菜单的经销商,我们默认您不需要在小助手群组中寻求帮助,为防止间接的广告行为,您可以继续浏览消息,但不再能够发送消息或添加反应.若您的业务范围不包含付费辅助或成人内容,通常经过人工审核后将解除禁言.\n等待过程中请勿退出服务器,否则将被永久封禁")
                             except discord.HTTPException:
                                 pass
                             await message.delete()
-                            break
+                            return
+
+                if bio:
+                    for keyword in keywords_to_include:
+                        if keyword in bio.lower():
+                            until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=72)
+                            await message.author.edit(timed_out_until=until, reason="[自动]About me潜在广告")
+
+                            if guildid == 388227343862464513:
+                                ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
+                                await ntfcn.send(f"{message.author.mention}的个人介绍中可能存在广告行为,已被临时禁言,管理员请人工确认.\n当前pronouns快照:```{pronouns}``` \n当前Bio快照:```{bio}``` \n如需取消禁言并信任此用户的个人介绍,请输入命令:```&pftrust {message.author.id}```")
+                            try:
+                                await message.author.send("经过对用户名/个人简介/消息的评估,您被识别为潜在的广告或垃圾账号,已被禁言并通知管理员人工审核,请耐心等待.若24小时内未处理,请主动联系管理员.如果您是付费菜单的经销商,我们默认您不需要在小助手群组中寻求帮助,为防止间接的广告行为,您可以继续浏览消息,但不再能够发送消息或添加反应.若您的业务范围不包含付费辅助或成人内容,通常经过人工审核后将解除禁言.\n等待过程中请勿退出服务器,否则将被永久封禁")
+                            except discord.HTTPException:
+                                pass
+                            await message.delete()
+                            return
+                        
             except ValueError:
                 log.info("BIO-无法解析JSON结果。")
                 ntfcnsec = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
@@ -446,7 +467,6 @@ class Events(MixinMeta):
             log.info(response.text)
             ntfcnsec = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
             await ntfcnsec.send(f"Bio解析模块疑似故障-HTTP ERROR:{response.status_code}")
-
 
     async def check_hidelinks(self, message: discord.Message):
         guildid = message.guild.id

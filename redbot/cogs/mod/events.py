@@ -414,10 +414,11 @@ class Events(MixinMeta):
         if response.status_code == 200:
             try:
                 json_result = response.json()
-                bio = json_result.get('user', {}).get('bio')
-                pronouns = json_result.get('user_profile', {}).get('pronouns')
-
-                log.info(f"Username: {message.author} Userid: {userid} Bio:{bio} Pronouns:{pronouns}")
+                userbio = json_result["user_profile"]["bio"]
+                guildbio = json_result["guild_member"]["bio"]
+                userpronouns = json_result["user_profile"]["pronouns"]
+                guildpronouns = json_result["guild_member_profile"]["pronouns"]
+                
                 keywords_to_include = [
                 '招代理', '购买', '招辅助代理', '辅助代理商', 'reseller', '中国经销','輔助','自喵','抽獎','抽奖','買東西','找我','cheat','gtaxmenu','ezmod','modz.com','hzmod','qlmenu','Q群', '🐧','nitro','stand-','便宜'
                 '中国总经销', '官方经销', '总经销', '代理', '官方总代', '诚招合作', '加盟','誠信',
@@ -425,15 +426,15 @@ class Events(MixinMeta):
                 'shop', 'cheapest', 'store', 'cheapest', 'store', '商业合作', 'titan', '2take1', 'fikit', 'paypal', 'erebus', 'discord.gg', 'discord.com'
                 ]
 
-                if pronouns:
+                if guildpronouns:
                     for keyword in keywords_to_include:
-                        if keyword in pronouns.lower():
+                        if keyword in guildpronouns.lower():
                             until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=72)
-                            await message.author.edit(timed_out_until=until, reason="[自动]pronouns潜在广告")
+                            await message.author.edit(timed_out_until=until, reason="[自动]guildpronouns潜在广告")
 
                             if guildid == 388227343862464513:
                                 ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
-                                await ntfcn.send(f"{message.author.mention}的个人主页中可能存在广告行为,已被临时禁言,管理员请人工确认.\n当前pronouns快照:```{pronouns}``` \n当前Bio快照:```{bio}``` \n如需取消禁言并信任此用户的个人介绍,请输入命令:```&pftrust {message.author.id}```")
+                                await ntfcn.send(f"{message.author.mention}的个人主页中可能存在广告行为,已被临时禁言,管理员请人工确认.\n当前guildpronouns快照:```{guildpronouns}```\n如需取消禁言并信任此用户的个人介绍,请输入命令:```&pftrust {message.author.id}```")
                             try:
                                 await message.author.send("经过对用户名/个人简介/消息的评估,您被识别为潜在的广告或垃圾账号,已被禁言并通知管理员人工审核,请耐心等待.若24小时内未处理,请主动联系管理员.如果您是付费菜单的经销商,我们默认您不需要在小助手群组中寻求帮助,为防止间接的广告行为,您可以继续浏览消息,但不再能够发送消息或添加反应.若您的业务范围不包含付费辅助或成人内容,通常经过人工审核后将解除禁言.\n等待过程中请勿退出服务器,否则将被永久封禁")
                             except discord.HTTPException:
@@ -441,15 +442,31 @@ class Events(MixinMeta):
                             await message.delete()
                             return
 
-                if bio:
+                if userpronouns:
                     for keyword in keywords_to_include:
-                        if keyword in bio.lower():
+                        if keyword in userpronouns.lower():
+                            until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=72)
+                            await message.author.edit(timed_out_until=until, reason="[自动]userpronouns潜在广告")
+
+                            if guildid == 388227343862464513:
+                                ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
+                                await ntfcn.send(f"{message.author.mention}的个人主页中可能存在广告行为,已被临时禁言,管理员请人工确认.\n当前userpronouns快照:```{userpronouns}```\n如需取消禁言并信任此用户的个人介绍,请输入命令:```&pftrust {message.author.id}```")
+                            try:
+                                await message.author.send("经过对用户名/个人简介/消息的评估,您被识别为潜在的广告或垃圾账号,已被禁言并通知管理员人工审核,请耐心等待.若24小时内未处理,请主动联系管理员.如果您是付费菜单的经销商,我们默认您不需要在小助手群组中寻求帮助,为防止间接的广告行为,您可以继续浏览消息,但不再能够发送消息或添加反应.若您的业务范围不包含付费辅助或成人内容,通常经过人工审核后将解除禁言.\n等待过程中请勿退出服务器,否则将被永久封禁")
+                            except discord.HTTPException:
+                                pass
+                            await message.delete()
+                            return
+
+                if userbio:
+                    for keyword in keywords_to_include:
+                        if keyword in userbio.lower():
                             until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=72)
                             await message.author.edit(timed_out_until=until, reason="[自动]About me潜在广告")
 
                             if guildid == 388227343862464513:
                                 ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
-                                await ntfcn.send(f"{message.author.mention}的个人介绍中可能存在广告行为,已被临时禁言,管理员请人工确认.\n当前pronouns快照:```{pronouns}``` \n当前Bio快照:```{bio}``` \n如需取消禁言并信任此用户的个人介绍,请输入命令:```&pftrust {message.author.id}```")
+                                await ntfcn.send(f"{message.author.mention}的个人介绍中可能存在广告行为,已被临时禁言,管理员请人工确认.\n当前Bio快照:```{userbio}``` \n如需取消禁言并信任此用户的个人介绍,请输入命令:```&pftrust {message.author.id}```")
                             try:
                                 await message.author.send("经过对用户名/个人简介/消息的评估,您被识别为潜在的广告或垃圾账号,已被禁言并通知管理员人工审核,请耐心等待.若24小时内未处理,请主动联系管理员.如果您是付费菜单的经销商,我们默认您不需要在小助手群组中寻求帮助,为防止间接的广告行为,您可以继续浏览消息,但不再能够发送消息或添加反应.若您的业务范围不包含付费辅助或成人内容,通常经过人工审核后将解除禁言.\n等待过程中请勿退出服务器,否则将被永久封禁")
                             except discord.HTTPException:
@@ -457,7 +474,23 @@ class Events(MixinMeta):
                             await message.delete()
                             return
                         
-            except ValueError:
+                if guildbio:
+                    for keyword in keywords_to_include:
+                        if keyword in guildbio.lower():
+                            until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=72)
+                            await message.author.edit(timed_out_until=until, reason="[自动]About me潜在广告")
+
+                            if guildid == 388227343862464513:
+                                ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
+                                await ntfcn.send(f"{message.author.mention}的个人介绍中可能存在广告行为,已被临时禁言,管理员请人工确认.\n当前Bio快照:```{guildbio}``` \n如需取消禁言并信任此用户的个人介绍,请输入命令:```&pftrust {message.author.id}```")
+                            try:
+                                await message.author.send("经过对用户名/个人简介/消息的评估,您被识别为潜在的广告或垃圾账号,已被禁言并通知管理员人工审核,请耐心等待.若24小时内未处理,请主动联系管理员.如果您是付费菜单的经销商,我们默认您不需要在小助手群组中寻求帮助,为防止间接的广告行为,您可以继续浏览消息,但不再能够发送消息或添加反应.若您的业务范围不包含付费辅助或成人内容,通常经过人工审核后将解除禁言.\n等待过程中请勿退出服务器,否则将被永久封禁")
+                            except discord.HTTPException:
+                                pass
+                            await message.delete()
+                            return
+                        
+            except:
                 log.info("BIO-无法解析JSON结果。")
                 ntfcnsec = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
                 await ntfcnsec.send("Bio解析模块疑似故障-json解析失败")

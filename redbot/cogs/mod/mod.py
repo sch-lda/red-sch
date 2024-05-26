@@ -64,7 +64,7 @@ class Mod(
 
     default_channel_settings = {"ignored": False}
 
-    default_member_settings = {"past_nicks": [], "perms_cache": {}, "banned_until": False}
+    default_member_settings = {"past_nicks": [], "perms_cache": {}, "banned_until": False, "pf_last_check_time": ""}
 
     default_user_settings = {"past_names": [], "past_display_names": [], "iftrusted": []}
 

@@ -393,13 +393,23 @@ class Events(MixinMeta):
     
     async def muteadacc(self, message: discord.Message):
         guildid = message.guild.id
+        userid = message.author.id
+        current_time = datetime.datetime.now(datetime.timezone.utc)
         async with self.config.user(message.author).iftrusted() as trusted:
             if trusted:
                 return
+            
+        last_check = await self.config.member_from_ids(guildid, userid).pf_last_check_time()
+        if last_check != "":
+            last_check_f = datetime.datetime.fromisoformat(last_check)
+            if current_time - last_check_f < datetime.timedelta(hours=6):
+                log.info(f"跳过对用户 {userid} 的profile检查,下次检查时间: {last_check_f + datetime.timedelta(hours=6)}")
+                return
+        
         Authorization = await self.bot.get_shared_api_tokens("dc2auth")
         if Authorization.get("auth") is None:
             return
-        userid = message.author.id
+        
         url = f"https://discord.com/api/v9/users/{userid}/profile?with_mutual_guilds=true&with_mutual_friends_count=false&guild_id={message.guild.id}"
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0",
@@ -489,6 +499,8 @@ class Events(MixinMeta):
                                 pass
                             await message.delete()
                             return
+                
+                await self.config.member_from_ids(guildid, userid).pf_last_check_time.set(current_time.isoformat())
                         
             except:
                 log.info("BIO-无法解析JSON结果。")

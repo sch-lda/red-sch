@@ -351,3 +351,10 @@ class ModInfo(MixinMeta):
         await self.config.user(member).iftrusted.set([])
         await ctx.send(f"{member.mention}的个人介绍中可能存在广告行为,由管理员人工确认 \n如需取消禁言并信任此用户的个人介绍,请输入命令:&pftrust {member.id}")
 
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def resetmemberconf(self, ctx: commands.Context):
+        """重置整个MEMBER配置."""
+        await self.config.clear_all_members(ctx.guild)
+        await ctx.send(f"已重置{ctx.guild}的MEMBER配置.")

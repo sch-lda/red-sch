@@ -560,7 +560,7 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             )
         )
 
-    @commands.group(cls=commands.commands._AlwaysAvailableGroup)
+    @commands.group()
     async def mydata(self, ctx: commands.Context):
         """
         Commands which interact with the data [botname] has about you.
@@ -571,7 +571,7 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
     # 1/10 minutes. It's a static response, but the inability to lock
     # will annoy people if it's spammable
     @commands.cooldown(1, 600, commands.BucketType.user)
-    @mydata.command(cls=commands.commands._AlwaysAvailableCommand, name="whatdata")
+    @mydata.command(name="whatdata")
     async def mydata_whatdata(self, ctx: commands.Context):
         """
         Find out what type of data [botname] stores and why.
@@ -600,7 +600,7 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
 
     # 1/30 minutes. It's not likely to change much and uploads a standalone webpage.
     @commands.cooldown(1, 1800, commands.BucketType.user)
-    @mydata.command(cls=commands.commands._AlwaysAvailableCommand, name="3rdparty")
+    @mydata.command(name="3rdparty")
     async def mydata_3rd_party(self, ctx: commands.Context):
         """View the End User Data statements of each 3rd-party module.
 
@@ -690,7 +690,7 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
     # and small bots that do restart often don't have enough
     # users for this to be an issue.
     @commands.cooldown(1, 86400, commands.BucketType.user)
-    @mydata.command(cls=commands.commands._ForgetMeSpecialCommand, name="forgetme")
+    @mydata.command(name="forgetme")
     async def mydata_forgetme(self, ctx: commands.Context):
         """
         Have [botname] forget what it knows about you.
@@ -788,7 +788,7 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
     # The cooldown of this should be longer once actually implemented
     # This is a couple hours, and lets people occasionally check status, I guess.
     @commands.cooldown(1, 7200, commands.BucketType.user)
-    @mydata.command(cls=commands.commands._AlwaysAvailableCommand, name="getmydata")
+    @mydata.command(name="getmydata")
     async def mydata_getdata(self, ctx: commands.Context):
         """[Coming Soon] Get what data [botname] has about you."""
         await ctx.send(
@@ -5885,7 +5885,6 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
     # Otherwise interfering with the ability for this command to be accessible is also a violation.
     @commands.cooldown(1, 180, lambda ctx: (ctx.message.channel.id, ctx.message.author.id))
     @commands.command(
-        cls=commands.commands._AlwaysAvailableCommand,
         name="licenseinfo",
         aliases=["licenceinfo"],
         i18n=_,

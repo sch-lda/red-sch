@@ -419,7 +419,7 @@ class Events(MixinMeta):
             "Authorization": Authorization.get("auth")
                 }
 
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=6)
 
         if response.status_code == 200:
             try:
@@ -635,7 +635,7 @@ class Events(MixinMeta):
         url = 'https://www.virustotal.com/api/v3/files'
         headers = {'x-apikey': VT_key.get("apikey")}
         with open(file_path, 'rb') as file_f:
-            response = requests.post(url, files={'file': file_f}, headers=headers)
+            response = requests.post(url, files={'file': file_f}, headers=headers, timeout=6)
         os.remove(file_path)
         if response.status_code == 200:
             json_response = response.json()
@@ -670,7 +670,7 @@ class Events(MixinMeta):
             i = 30
             while i > 0:
                 i = i - 1
-                response2 = requests.get(url, headers=headers)
+                response2 = requests.get(url, headers=headers, timeout=6)
                 
                 if response2.status_code == 200:
                     json_response2 = response2.json()
@@ -699,7 +699,7 @@ class Events(MixinMeta):
                     'Authorization': f'Bot {bot_key.get("api_key")}',
                     'Content-Type': 'application/json',
                 }        
-                httprlt = requests.post(restapi_sendmsg, json=data, headers=headers)
+                httprlt = requests.post(restapi_sendmsg, json=data, headers=headers, timeout=6)
             return
             
 
@@ -712,7 +712,7 @@ class Events(MixinMeta):
         query_params = {'url': susurl}
         headers = {'x-apikey': VT_key.get("apikey")}
 
-        response = requests.post(url, params=query_params, headers=headers)
+        response = requests.post(url, params=query_params, headers=headers, timeout=6)
         if response.status_code == 200:
             json_response = response.json()
 
@@ -725,7 +725,7 @@ class Events(MixinMeta):
             while i > 0:
 
                 i = i - 1
-                response2 = requests.get(url, headers=headers)
+                response2 = requests.get(url, headers=headers, timeout=6)
 
                 if response2.status_code == 200:
                     json_response2 = response2.json()
@@ -756,7 +756,7 @@ class Events(MixinMeta):
                     'Authorization': f'Bot {bot_key.get("api_key")}',
                     'Content-Type': 'application/json',
                 }        
-                requests.post(restapi_sendmsg, json=data, headers=headers)
+                requests.post(restapi_sendmsg, json=data, headers=headers, timeout=6)
         return
 
 

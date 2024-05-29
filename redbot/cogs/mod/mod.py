@@ -21,6 +21,7 @@ _ = T_ = Translator("Mod", __file__)
 
 __version__ = "1.2.0"
 
+log = logging.getLogger("red.mod")
 
 class CompositeMetaClass(type(commands.Cog), type(ABC)):
     """
@@ -82,6 +83,8 @@ class Mod(
         self.cache_mod: dict = {}
         self.tban_expiry_task = asyncio.create_task(self.tempban_expirations_task())
         self.last_case: dict = defaultdict(dict)
+        self.mthread1 = None
+        self.mthread2 = None
 
     async def red_delete_data_for_user(
         self,
@@ -116,6 +119,15 @@ class Mod(
 
     def cog_unload(self):
         self.tban_expiry_task.cancel()
+        if self.mthread1:
+            if self.mthread1.is_alive():
+                log.info("Cancelling mthread1")
+                self.mthread1.cancle()
+        if self.mthread2:
+            if self.mthread2.is_alive():
+                log.info("Cancelling mthread2")
+                self.mthread2.cancle()
+                
 
     async def _maybe_update_config(self):
         """Maybe update `delete_delay` value set by Config prior to Mod 1.0.0."""

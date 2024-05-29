@@ -651,8 +651,8 @@ class Events(MixinMeta):
             url = f'https://www.virustotal.com/api/v3/analyses/{aid}'
             headers = {'x-apikey': VT_key.get("apikey")}
 
-            thread2 = threading.Thread(target=self.call_async_VT_file_scan, args=(url, message))
-            thread2.start()
+            self.mthread2 = threading.Thread(target=self.call_async_VT_file_scan, args=(url, message))
+            self.mthread2.start()
         return
 
     
@@ -792,8 +792,8 @@ class Events(MixinMeta):
                     domain = domainpre + "." + suffix
                     if domain == "github.com" or domain == "youtube.com" or domain == "youtu.be" or domain == "bilibili.com" or domain == "b23.tv" or domain == "githubusercontent.com" or domain == "discord.com" or domain == "discord.gg" or domain == "123pan.com" or domain == "host3650.live" or domain == "microsoft.com" or domain == "unknowncheats" or domain == "wikipedia.org" or domain == "vxtwitter.com" or domain == "twitter.com" or domain == "x.com" or domain == "crazyzhang.cn" or domain == "discordapp.com":
                         continue
-                    thread1 = threading.Thread(target=self.call_async_VT_url_scan, args=(url, message))
-                    thread1.start()
+                    self.mthread1 = threading.Thread(target=self.call_async_VT_url_scan, args=(url, message))
+                    self.mthread1.start()
 
     async def check_ping_everyone_here(self, message: discord.Message):
         if "@everyone" in message.content or "@here" in message.content:

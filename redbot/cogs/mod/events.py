@@ -418,8 +418,13 @@ class Events(MixinMeta):
             "Accept-Encoding": "gzip, deflate, br",
             "Authorization": Authorization.get("auth")
                 }
-
-        response = requests.get(url, headers=headers, timeout=6)
+        try:
+            response = requests.get(url, headers=headers, timeout=6)
+        except requests.exceptions.RequestException as e:
+            log.info(f"Bio解析-HTTP请求失败: {e}")
+            ntfcnsec = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
+            await ntfcnsec.send("Bio解析模块异常-HTTP请求超时")
+            return
 
         if response.status_code == 200:
             try:

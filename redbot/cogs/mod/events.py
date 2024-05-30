@@ -526,13 +526,14 @@ class Events(MixinMeta):
         if match_hidelink:
             relurlpattern = r"(https?://\S+)"
             scanedurls = re.findall(relurlpattern, message.content)
+
             for surl in scanedurls:
                 domainpre = tldextract.extract(surl).domain
                 suffix = tldextract.extract(surl).suffix
                 domain = domainpre + "." + suffix
                 if domain == "discordapp.com":
                     return
-            
+
             detect_list = ["steamcommunity.com/gift","from steam"]
 
             for suslink_p in detect_list:
@@ -563,7 +564,21 @@ class Events(MixinMeta):
                     log.info(f"限速锁定解除 {len(modmsgs)}")
                     mod_cache[message.author].clear()
                     return True
+                
 
+            try:
+                log.info("123")
+                url_pattern = re.compile(r'\((http[s]?://[^)]*)')
+                urls = url_pattern.findall(message.content)
+                response = requests.head(urls[0], allow_redirects=True, timeout=3)
+                content_type = response.headers.get('content-type')
+                if content_type:
+                    if "image" in content_type:
+                        log.info(f"链接为图片,跳过: {urls}")
+                        return
+            except requests.exceptions.RequestException as e:
+                log.info(f"隐藏链接解析-: {e}")
+            
             await message.delete()
             await message.channel.send(f'{message.author.mention} 请勿使用markdown语法隐藏真实网址,原始消息已私发给您,请重新编辑', delete_after=60)
             try:

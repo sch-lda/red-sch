@@ -564,10 +564,8 @@ class Events(MixinMeta):
                     log.info(f"限速锁定解除 {len(modmsgs)}")
                     mod_cache[message.author].clear()
                     return True
-                
 
             try:
-                log.info("123")
                 url_pattern = re.compile(r'\((http[s]?://[^)]*)')
                 urls = url_pattern.findall(message.content)
                 response = requests.head(urls[0], allow_redirects=True, timeout=3)

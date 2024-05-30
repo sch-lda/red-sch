@@ -568,13 +568,18 @@ class Events(MixinMeta):
             try:
                 url_pattern = re.compile(r'\((http[s]?://[^)]*)')
                 urls = url_pattern.findall(message.content)
+                if len(urls) > 1:
+                    await message.delete()
+                    await message.channel.send(f'{message.author.mention} 复合markdown', delete_after=180)
+
                 response = requests.head(urls[0], allow_redirects=True, timeout=3)
                 content_type = response.headers.get('content-type')
                 if content_type:
                     if "image" in content_type:
                         log.info(f"链接为图片,跳过: {urls}")
                         return
-            except:
+            except requests.exceptions.RequestException as e:
+                log.info(f"链接解析-HTTP请求失败: {e}")
                 pass
             
             await message.delete()

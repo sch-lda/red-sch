@@ -576,8 +576,8 @@ class Events(MixinMeta):
                     if "image" in content_type:
                         log.info(f"链接为图片,跳过: {urls}")
                         return
-            except requests.exceptions.RequestException as e:
-                log.info(f"隐藏链接解析-: {e}")
+            except:
+                pass
             
             await message.delete()
             await message.channel.send(f'{message.author.mention} 请勿使用markdown语法隐藏真实网址,原始消息已私发给您,请重新编辑', delete_after=60)

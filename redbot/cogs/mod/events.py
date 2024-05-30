@@ -403,7 +403,7 @@ class Events(MixinMeta):
         if last_check != "":
             last_check_f = datetime.datetime.fromisoformat(last_check)
             if current_time - last_check_f < datetime.timedelta(hours=6):
-                log.info(f"跳过对用户 {userid} 的profile检查,下次检查时间: {last_check_f + datetime.timedelta(hours=6)}")
+                # log.info(f"跳过对用户 {userid} 的profile检查,下次检查时间: {last_check_f + datetime.timedelta(hours=6)}")
                 return
         
         Authorization = await self.bot.get_shared_api_tokens("dc2auth")
@@ -532,33 +532,37 @@ class Events(MixinMeta):
                 domain = domainpre + "." + suffix
                 if domain == "discordapp.com":
                     return
-                
-            if "steamcommunity.com/gift" or "from steam" in message.content:
-                mod_cache = self.cache_mod.get(guildid, None)
-                if mod_cache is None:
-                    mod_cache = self.cache_mod[guildid] = defaultdict(lambda: deque(maxlen=6))
-                modmsgs = mod_cache[message.author]
-                if len(modmsgs) > 0:
-                    log.info(f"限速锁定未解除锁定 {len(modmsgs)}")
-                    await message.delete()
-                    return False
-                
-                mod_cache[message.author].append("locked")
-                try:
-                    until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=30)
-                    await message.author.edit(timed_out_until=until, reason="[自动]softban预处理")
-                    await message.channel.send(f"{message.author.mention} 被判定为广告机(steam礼品卡诈骗),已踢出.天上没有馅饼,推广免费礼物、nitro、18+内容的均为诈骗.勿填写勿扫码.")
-                    ysch = self.bot.get_user(1044589526116470844)
-                    await self.repeattosoftban(message.guild, ysch, message.channel, message.author, "[自动]发送盗号链接(steam礼品卡)")
-                    if guildid == 388227343862464513:
-                        ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
-                        await ntfcn.send(f"<@{message.author.id}>  ({message.author.name}) 被识别为广告机,已撤回近24h消息并踢出.\n判断原因:steam礼品卡诈骗链接 \n频道:{message.channel.mention}\n当前消息快照:```{message.content}```")
+            
+            detect_list = ["steamcommunity.com/gift","from steam"]
 
-                except discord.HTTPException:
-                    pass
-                log.info(f"限速锁定解除 {len(modmsgs)}")
-                mod_cache[message.author].clear()
-                return True
+            for suslink_p in detect_list:
+                if suslink_p in message.content:
+                    log.info(f"关键词: {suslink_p}")
+                    mod_cache = self.cache_mod.get(guildid, None)
+                    if mod_cache is None:
+                        mod_cache = self.cache_mod[guildid] = defaultdict(lambda: deque(maxlen=6))
+                    modmsgs = mod_cache[message.author]
+                    if len(modmsgs) > 0:
+                        log.info(f"限速锁定未解除锁定 {len(modmsgs)}")
+                        await message.delete()
+                        return False
+                        
+                    mod_cache[message.author].append("locked")
+                    try:
+                        until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=30)
+                        await message.author.edit(timed_out_until=until, reason="[自动]softban预处理")
+                        await message.channel.send(f"{message.author.mention} 被判定为广告机(steam礼品卡诈骗),已踢出.天上没有馅饼,推广免费礼物、nitro、18+内容的均为诈骗.勿填写勿扫码.")
+                        ysch = self.bot.get_user(1044589526116470844)
+                        await self.repeattosoftban(message.guild, ysch, message.channel, message.author, "[自动]发送盗号链接(steam礼品卡)")
+                        if guildid == 388227343862464513:
+                            ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
+                            await ntfcn.send(f"<@{message.author.id}>  ({message.author.name}) 被识别为广告机,已撤回近24h消息并踢出.\n判断原因:steam礼品卡诈骗链接 \n频道:{message.channel.mention}\n当前消息快照:```{message.content}```")
+
+                    except discord.HTTPException:
+                        pass
+                    log.info(f"限速锁定解除 {len(modmsgs)}")
+                    mod_cache[message.author].clear()
+                    return True
 
             await message.delete()
             await message.channel.send(f'{message.author.mention} 请勿使用markdown语法隐藏真实网址,原始消息已私发给您,请重新编辑', delete_after=60)

@@ -688,7 +688,7 @@ class Events(MixinMeta):
             harmc = analysdata['attributes']['stats']['malicious']
             susc = analysdata['attributes']['stats']['suspicious']
             noharmc = analysdata['attributes']['stats']['harmless']
-            if harmc > 0 or susc > 0:
+            if harmc > 1 or susc > 2:
                 bot_key = await self.bot.get_shared_api_tokens("bugbot")
                 if bot_key.get("api_key") is None:
                     return
@@ -745,7 +745,7 @@ class Events(MixinMeta):
             harmc = analysdata['attributes']['stats']['malicious']
             susc = analysdata['attributes']['stats']['suspicious']
             noharmc = analysdata['attributes']['stats']['harmless']
-            if harmc > 0 or susc > 0:            
+            if harmc > 1 or susc > 2:            
                 bot_key = await self.bot.get_shared_api_tokens("bugbot")
                 if bot_key.get("api_key") is None:
                     return

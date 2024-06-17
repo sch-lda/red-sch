@@ -300,6 +300,14 @@ class Events(MixinMeta):
 
         return False
 
+    async def affcodecheck(self, message):
+        guild, author = message.guild, message.author
+        detect_list = ["affcode","register?code","guest/i"]
+
+        for aff in detect_list:
+            if aff in message.content:
+                await message.reply("检测到包含邀请参数的链接.链接所有者可能会从中获得邀请报酬,包括但不限于充值分成.机场的分享者应在说明后发送带邀请参数的链接,其他人应享有知情权,自愿参与.机场或服务的任何问题(信息泄露、跑路)与本server无关,无人能够担保,请自行甄别.")
+
 
     async def check_mention_spam(self, message):
         guild, author = message.guild, message.author
@@ -510,7 +518,7 @@ class Events(MixinMeta):
                 if domain == "discordapp.com":
                     return
 
-            detect_list = ["steamcommunity.com/gift","from steam"]
+            detect_list = ["steamcommunity.com/gift","from steam","Gift 50$"]
 
             for suslink_p in detect_list:
                 if suslink_p in message.content:
@@ -526,7 +534,7 @@ class Events(MixinMeta):
                         
                     mod_cache[message.author].append("locked")
                     try:
-                        until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=30)
+                        until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
                         await message.author.edit(timed_out_until=until, reason="[自动]softban预处理")
                         await message.channel.send(f"{message.author.mention} 被判定为广告机(steam礼品卡诈骗),已踢出.天上没有馅饼,推广免费礼物、nitro、18+内容的均为诈骗.勿填写勿扫码.")
                         ysch = self.bot.get_user(1044589526116470844)
@@ -844,6 +852,7 @@ class Events(MixinMeta):
             if not deleted:
                 deleted = await self.checkurl(message)
                 if not deleted:
+                    await self.affcodecheck(message)
                     await self.urlsafecheck(message)
                     await self.filesafecheck(message)
 
@@ -883,6 +892,7 @@ class Events(MixinMeta):
                     # await self.decodeqr(message)
                     deleted = await self.checkurl(message)
                     if not deleted:
+                        await self.affcodecheck(message)
                         await self.urlsafecheck(message)
                         await self.filesafecheck(message)
 

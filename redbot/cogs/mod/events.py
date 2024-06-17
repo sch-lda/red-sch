@@ -302,11 +302,11 @@ class Events(MixinMeta):
 
     async def affcodecheck(self, message):
         guild, author = message.guild, message.author
-        detect_list = ["affcode","register?code","guest/i"]
+        detect_list = ["affcode","register?code","guest/i","invite_code","?register=","?aff=","utm_content"]
 
         for aff in detect_list:
             if aff in message.content:
-                await message.reply("检测到包含邀请参数的链接.链接所有者可能会从中获得邀请报酬,包括但不限于充值分成.机场的分享者应在说明后发送带邀请参数的链接,其他人应享有知情权,自愿参与.机场或服务的任何问题(信息泄露、跑路)与本server无关,无人能够担保,请自行甄别.")
+                await message.reply("检测到包含邀请参数的链接.链接所有者可能会从中获得邀请报酬,包括但不限于充值分成.机场的分享者应在说明后发送带邀请参数的链接,其他人应享有知情权,自愿参与.机场或服务的任何问题(信息泄露、跑路)与本server无关,无人能够担保,请自行甄别.\n如果您频繁发送或者在无人询问的情况下主动推广机场等付费资源,您将被警告甚至禁言.")
 
 
     async def check_mention_spam(self, message):

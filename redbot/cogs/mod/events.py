@@ -225,7 +225,7 @@ class Events(MixinMeta):
                 invitechannel = guild.get_channel(605035182143176711)
                 modchannel = guild.get_channel(970972545564168232)
                 await modchannel.send(f"解析Automod动作+关键词检测: 已踢出 <@{author.id}> 并通知其修改密码.")
-                await self.repeattosoftban(guild, ysch, invitechannel, author, "[自动]同时触发Doscord Automod+关键词黑名单识别")
+                await self.repeattosoftban(guild, ysch, invitechannel, author, "[自动]同时触发Discord Automod+关键词黑名单识别")
                 mod_cache[author].clear()
                 log.info(f"限速锁定解除 {len(modmsgs)}")
 
@@ -588,8 +588,8 @@ class Events(MixinMeta):
             count_mk = 0
             for attachment in message.attachments:
                 if attachment.filename.endswith('.png') or attachment.filename.endswith('.jpg') or attachment.filename.endswith('.jpeg'):
-                    await attachment.save(f"/home/sch/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")
-                    img = Image.open(f"/home/sch/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")
+                    await attachment.save(f"/home/azureuser/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")
+                    img = Image.open(f"/home/azureuser/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")
                     decoded_objects = pyzbar.decode(img)
             
                     if decoded_objects:
@@ -624,7 +624,7 @@ class Events(MixinMeta):
                                 continue
                             await message.channel.send(f"检测到二维码,已完成内容识别：{qr_code_data} 警告：正常聊天不需要用到二维码。二维码通常用于隐藏网址。为保护您的个人利益，规避隐私和法律风险，请勿分享登录信息或帮助验证。发送存在登录或验证二维码者请主动撤回。否则将被禁言！")
                     img.close()
-                    os.remove(f"/home/sch/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")        
+                    os.remove(f"/home/azureuser/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")        
                 count_mk += 1
 
     async def checkurl(self, message: discord.Message):
@@ -774,7 +774,7 @@ class Events(MixinMeta):
     async def filesafecheck(self, message: discord.Message):
             if len(message.attachments) > 0:
                 for attachment in message.attachments:
-                    file_path = f'/home/sch/bot_tmp/atc/{attachment.filename}'
+                    file_path = f'/home/azureuser/bot_tmp/atc/{attachment.filename}'
                     if attachment.content_type == None:
                         return
                     if attachment.content_type.startswith("image") or attachment.content_type.startswith("text") or attachment.content_type.startswith("audio") or attachment.content_type.startswith("video"):

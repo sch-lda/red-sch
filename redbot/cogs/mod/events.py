@@ -312,6 +312,8 @@ class Events(MixinMeta):
         guild, author = message.guild, message.author
         if guild.id != 388227343862464513:
             return
+        if message.channel.id == 608951880403517470:
+            return
         if author.bot:
             return
         

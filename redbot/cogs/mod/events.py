@@ -833,15 +833,30 @@ class Events(MixinMeta):
 
     async def check_ping_everyone_here(self, message: discord.Message):
         if "@everyone" in message.content or "@here" in message.content:
-            await message.delete()
-            await message.channel.send(f'{message.author.mention} 您不具有ping everyone or here权限.', delete_after=60)
+
             if message.guild.id == 388227343862464513:
-                ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
-                await ntfcn.send(f"{message.author.mention}试图mention everyone or here. \n 当前消息快照:```{message.content}```")
-            try:
-                await message.author.send(f"您的原始消息是: ```{message.content}```")
-            except discord.HTTPException:
-                pass
+                if "discord.com" in message.content or "discord.gg" in message.content:
+                    until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=30)
+                    await message.author.edit(timed_out_until=until, reason="[自动]mass mention+潜在的邀请链接")
+                    try:
+                        await message.delete()
+                        await message.channel.send(f'{message.author.mention} 您的消息可能包含邀请链接,且存在批量提及行为,被判断为广告[可信度较高],已禁言30min并通知管理员,请等待人工复核', delete_after=600)
+                    except:
+                        pass
+                    ntfcn = message.guild.get_channel(970972545564168232) #通知频道-次要-bot命令频道
+                    await ntfcn.send(f"{message.author.mention}试图mention everyone or here.消息中可能存在邀请链接,已禁言30min \n 当前消息快照:```{message.content}```")
+                else:
+                    try:
+                        await message.delete()
+                        await message.channel.send(f'{message.author.mention} 您不具有ping everyone or here权限.', delete_after=60)
+                    except:
+                        pass
+                    ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
+                    await ntfcn.send(f"{message.author.mention}试图mention everyone or here. \n 当前消息快照:```{message.content}```")
+                    try:
+                        await message.author.send(f"您的原始消息是: ```{message.content}```")
+                    except discord.HTTPException:
+                        pass
             return True
 
     @commands.Cog.listener()

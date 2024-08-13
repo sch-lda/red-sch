@@ -861,10 +861,10 @@ class Events(MixinMeta):
 
     async def shadowfunc(self, message: discord.Message):
         # check shadow mute
-        async with self.config.user(message.author).shadow_mute() as ifshadowmute:
-            if ifshadowmute:
-                await message.delete()
-                return True
+        ifshadowmute = await self.config.user(message.author).shadow_mute()
+        if ifshadowmute:
+            await message.delete()
+            return True
         
         return False
 
@@ -906,11 +906,9 @@ class Events(MixinMeta):
             if not deleted:
                 deleted = await self.checkurl(message)
                 if not deleted:
-                    deleted = await self.shadowfunc(message)
-                    if not deleted:
-                        await self.affcodecheck(message)
-                        await self.urlsafecheck(message)
-                        await self.filesafecheck(message)
+                    await self.affcodecheck(message)
+                    await self.urlsafecheck(message)
+                    await self.filesafecheck(message)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -948,10 +946,12 @@ class Events(MixinMeta):
                     # await self.decodeqr(message)
                     deleted = await self.checkurl(message)
                     if not deleted:
-                        await self.affcodecheck(message)
-                        await self.urlsafecheck(message)
-                        await self.filesafecheck(message)
-                        await self.autorole(message)
+                        deleted = await self.shadowfunc(message)
+                        if not deleted:
+                            await self.affcodecheck(message)
+                            await self.urlsafecheck(message)
+                            await self.filesafecheck(message)
+                            await self.autorole(message)
 
     @staticmethod
     def _update_past_names(name: str, name_list: List[Optional[str]]) -> None:

@@ -358,3 +358,31 @@ class ModInfo(MixinMeta):
         """重置整个MEMBER配置."""
         await self.config.clear_all_members(ctx.guild)
         await ctx.send(f"已重置{ctx.guild}的MEMBER配置.")
+
+    @commands.command()
+    @commands.is_owner()
+    async def shadowban(self, ctx: commands.Context, *, member: discord.Member):
+        """Shadow ban a member."""
+        await self.config.user(member).shadow_ban.set(True)
+        await ctx.send(f"{member.mention} has been shadow banned.", delete_after=5)
+    
+    @commands.command()
+    @commands.is_owner()
+    async def shadowmute(self, ctx: commands.Context, *, member: discord.Member):
+        """Shadow mute a member."""
+        await self.config.user(member).shadow_mute.set(True)
+        await ctx.send(f"{member.mention} has been shadow muted.", delete_after=5)
+    
+    @commands.command()
+    @commands.is_owner()
+    async def unshadowban(self, ctx: commands.Context, *, member: discord.Member):
+        """Unshadow ban a member."""
+        await self.config.user(member).shadow_ban.set(False)
+        await ctx.send(f"{member.mention} has been unshadow banned.", delete_after=5)
+    
+    @commands.command()
+    @commands.is_owner()
+    async def unshadowmute(self, ctx: commands.Context, *, member: discord.Member):
+        """Unshadow mute a member."""
+        await self.config.user(member).shadow_mute.set(False)
+        await ctx.send(f"{member.mention} has been unshadow muted.", delete_after=5)

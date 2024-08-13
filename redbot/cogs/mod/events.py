@@ -859,6 +859,15 @@ class Events(MixinMeta):
                         pass
             return True
 
+    async def shadowfunc(self, message: discord.Message):
+        # check shadow mute
+        async with self.config.user(message.author).shadow_mute() as ifshadowmute:
+            if ifshadowmute:
+                await message.delete()
+                return True
+        
+        return False
+
     @commands.Cog.listener()
     async def on_automod_action(self, execution):
         detected = await self.check_duplicates_automod(execution)
@@ -897,9 +906,11 @@ class Events(MixinMeta):
             if not deleted:
                 deleted = await self.checkurl(message)
                 if not deleted:
-                    await self.affcodecheck(message)
-                    await self.urlsafecheck(message)
-                    await self.filesafecheck(message)
+                    deleted = await self.shadowfunc(message)
+                        if not deleted:
+                            await self.affcodecheck(message)
+                            await self.urlsafecheck(message)
+                            await self.filesafecheck(message)
 
     @commands.Cog.listener()
     async def on_message(self, message):

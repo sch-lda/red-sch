@@ -67,7 +67,7 @@ class Mod(
 
     default_member_settings = {"past_nicks": [], "perms_cache": {}, "banned_until": False, "pf_last_check_time": ""}
 
-    default_user_settings = {"past_names": [], "past_display_names": [], "iftrusted": []}
+    default_user_settings = {"past_names": [], "past_display_names": [], "iftrusted": [], "shadow_mute": False, "shadow_ban": False}
 
     def __init__(self, bot: Red):
         super().__init__()

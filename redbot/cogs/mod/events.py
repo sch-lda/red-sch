@@ -907,10 +907,10 @@ class Events(MixinMeta):
                 deleted = await self.checkurl(message)
                 if not deleted:
                     deleted = await self.shadowfunc(message)
-                        if not deleted:
-                            await self.affcodecheck(message)
-                            await self.urlsafecheck(message)
-                            await self.filesafecheck(message)
+                    if not deleted:
+                        await self.affcodecheck(message)
+                        await self.urlsafecheck(message)
+                        await self.filesafecheck(message)
 
     @commands.Cog.listener()
     async def on_message(self, message):

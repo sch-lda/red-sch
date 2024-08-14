@@ -324,6 +324,7 @@ class ModInfo(MixinMeta):
             await ctx.send(_("That member doesn't have any recorded name or nickname change."))
 
     @commands.command()
+    @commands.admin_or_permissions(manage_guild=True)
     async def pftrust(self, ctx: commands.Context, *, member: discord.Member):
         """信任用户的个人介绍."""
         async with self.config.user(member).iftrusted() as trusted:
@@ -337,6 +338,7 @@ class ModInfo(MixinMeta):
             await member.send("您已通过人工审核,稍后将可以正常发言,感谢您的等待.对您造成的不便请谅解.")
 
     @commands.command()
+    @commands.admin_or_permissions(manage_guild=True)
     async def pfcomf(self, ctx: commands.Context, *, member: discord.Member):
         """确认用户的个人介绍违规."""
         await self.config.user(member).iftrusted.set([])
@@ -346,6 +348,7 @@ class ModInfo(MixinMeta):
         await member.send("您被识别为潜在的广告或垃圾账号,已由管理员人工审核确认,不可申诉.")
 
     @commands.command()
+    @commands.admin_or_permissions(manage_guild=True)
     async def pfcomfsilence(self, ctx: commands.Context, *, member: discord.Member):
         """确认用户的个人介绍违规.(仅config)"""
         await self.config.user(member).iftrusted.set([])

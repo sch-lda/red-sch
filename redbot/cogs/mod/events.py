@@ -660,12 +660,16 @@ class Events(MixinMeta):
     async def checkurl(self, message: discord.Message):
         guildid = message.guild.id
 
-        if "weixin110.qq.com" in message.content or "weixin.qq.com/g" in message.content or "u.wechat.com" in message.content or "jq.qq.com" in message.content or "qm.qq.com" in message.content or "group_code" in message.content or "qr.alipay.com" in message.content or "wxp://" in message.content or "discord.com/ra/" in message.content:
+        if "weixin110.qq.com" in message.content or "weixin.qq.com/g" in message.content or "u.wechat.com" in message.content or "jq.qq.com" in message.content or "qm.qq.com" in message.content or "group_code" in message.content or "qr.alipay.com" in message.content or "wxp://" in message.content or "discord.com/ra/" in message.content or "gg.gg/" in message.content or "u.to/" in message.content or "t.ly/" in message.content:
             await message.delete()
-            await message.channel.send("检测可疑的链接,已撤回!")
+            await message.channel.send(f"{message.author.mention} 您的消息中存在可疑链接,已被撤回.")
             if guildid == 388227343862464513:
                 ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
                 await ntfcn.send(f"{message.author.mention}的消息中存在可疑链接(收付款/个人或群名片/微信辅助验证/discord登录). \n 当前消息快照:```{message.content}```")
+            try:
+                await message.author.send(f"您发送的消息 `{message.content}` 被识别为包含可疑链接,已被撤回.")
+            except discord.HTTPException:
+                log.info(f"无法私发消息给用户 {message.author.id}")
             return True
         return False
     

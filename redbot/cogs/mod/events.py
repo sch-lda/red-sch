@@ -880,6 +880,8 @@ class Events(MixinMeta):
  
     @commands.Cog.listener()
     async def on_message_edit(self, _prior, message):
+        if _prior.content == message.content:
+            return
         author = message.author
         if message.guild is None or self.bot.user == author:
             return

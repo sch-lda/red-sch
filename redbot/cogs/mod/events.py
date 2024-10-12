@@ -18,6 +18,7 @@ import tldextract
 import multiprocessing
 import time
 import threading
+from openai import OpenAI
 
 _ = i18n.Translator("Mod", __file__)
 log = logging.getLogger("red.mod")
@@ -314,6 +315,9 @@ class Events(MixinMeta):
             return
         if message.channel.id == 608951880403517470:
             return
+        if message.channel.id == 1254956902308122664:
+            return
+
         if author.bot:
             return
         
@@ -338,6 +342,81 @@ class Events(MixinMeta):
         await author.add_roles(rolebasic)
         await message.channel.send(f"{author.mention} 您没有任何身份组,已为您分配小航海组.")
 
+    async def openaicheck(self, message):
+        guild, author = message.guild, message.author
+        # if guild.id != 1056808446030250044:
+        #     return
+        current_time = datetime.datetime.now(datetime.timezone.utc)
+        last_check = await self.config.member_from_ids(guild.id, author.id).msg_last_check_time()
+        if last_check != "":
+            last_check_f = datetime.datetime.fromisoformat(last_check)
+            if current_time - last_check_f < datetime.timedelta(minutes=5):
+                # log.info(f"跳过对用户 {userid} 的msg检查,下次检查时间: {last_check_f + datetime.timedelta(hours=6)}")
+                return
+        
+        openai_api_key = await self.bot.get_shared_api_tokens("openai")
+        if openai_api_key.get("api_key") is None:
+            return
+        client = OpenAI(
+            # This is the default and can be omitted
+
+            api_key = openai_api_key.get("api_key"),
+            base_url = "https://gptoneapi.cc2077.site/v1"
+        )
+        ad_keywords = [
+            "steam $50 gift",
+            "free nude/porn",
+            "free nitro",
+            "OnlyFans Leaks",
+        ]
+        ad_keywords_string = ", ".join(ad_keywords)
+        prompt = f"这条聊天消息是否与广告词库的语义匹配,用Yes或No回答?\nAd keywords: {ad_keywords_string}\nMessage: {message.content}"
+
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                max_tokens=50,
+                messages=[
+                    {
+                    "role": "user",
+                    "content": prompt,
+                    },
+                ],
+            )
+        except Exception as e:
+            log.info(f"gpt失败: {e}")
+            return
+        
+        scan_times = await self.config.guild(guild).gpt_scan_msg_count()
+        scan_times += 1
+        await self.config.guild(guild).gpt_scan_msg_count.set(scan_times)
+
+        repstr = response.choices[0].message.content
+        # await message.channel.send(f"AI检测结果: {repstr}")
+        if "yes" in repstr or "Yes" in repstr or "YES" in repstr:
+            block_times = await self.config.guild(guild).gpt_block_msg_count()
+            block_times += 1
+            await self.config.guild(guild).gpt_block_msg_count.set(block_times)
+            async with self.config.member_from_ids(guild.id, author.id).stats() as stats:
+                stats["msg_last_check_count"] += 1
+                if stats["msg_last_check_count"] >= 3:
+                    until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60)
+                    await message.author.edit(timed_out_until=until, reason="[自动]潜在的广告机器人")
+                    stats["msg_last_check_count"] = 0
+                    if guild.id == 388227343862464513:
+                        ntfcn = message.guild.get_channel(1162401982649204777)
+                        await ntfcn.send(f"{message.author.mention} 被AI识别为潜在的广告机器人,已被禁言.请管理员人工审核.")
+            await message.delete()
+            await message.channel.send(f"{author.mention} 您的消息被识别为潜在的广告或诈骗消息")
+            try:
+                await author.send(f"您的消息被识别为潜在的广告或诈骗消息,已被删除.请勿发送任何诈骗信息.\n您的消息内容:```{message.content}```")
+            except discord.HTTPException:
+                pass
+            return True
+        
+        await self.config.member_from_ids(guild.id, author.id).msg_last_check_time.set(current_time.isoformat())
+
+        return False
 
     async def check_mention_spam(self, message):
         guild, author = message.guild, message.author
@@ -915,6 +994,7 @@ class Events(MixinMeta):
                     await self.affcodecheck(message)
                     await self.urlsafecheck(message)
                     await self.filesafecheck(message)
+                    
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -958,6 +1038,7 @@ class Events(MixinMeta):
                             await self.urlsafecheck(message)
                             await self.filesafecheck(message)
                             await self.autorole(message)
+                            await self.openaicheck(message)
 
     @staticmethod
     def _update_past_names(name: str, name_list: List[Optional[str]]) -> None:

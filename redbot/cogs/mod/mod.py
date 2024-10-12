@@ -61,11 +61,13 @@ class Mod(
         "default_days": 0,
         "default_tempban_duration": 60 * 60 * 24,
         "track_nicknames": True,
+        "gpt_scan_msg_count": 0,
+        "gpt_block_msg_count": 0,
     }
 
     default_channel_settings = {"ignored": False}
 
-    default_member_settings = {"past_nicks": [], "perms_cache": {}, "banned_until": False, "pf_last_check_time": ""}
+    default_member_settings = {"past_nicks": [], "perms_cache": {}, "banned_until": False, "pf_last_check_time": "", "msg_last_check_time": "", "stats": {"msg_last_check_count": 0}}
 
     default_user_settings = {"past_names": [], "past_display_names": [], "iftrusted": [], "shadow_mute": False, "shadow_ban": False}
 

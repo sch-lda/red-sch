@@ -346,6 +346,9 @@ class Events(MixinMeta):
         guild, author = message.guild, message.author
         # if guild.id != 1056808446030250044:
         #     return
+        if message.channel.id == 608951880403517470:
+            return
+        
         current_time = datetime.datetime.now(datetime.timezone.utc)
         last_check = await self.config.member_from_ids(guild.id, author.id).msg_last_check_time()
         if last_check != "":
@@ -994,6 +997,8 @@ class Events(MixinMeta):
                     await self.affcodecheck(message)
                     await self.urlsafecheck(message)
                     await self.filesafecheck(message)
+                    await self.openaicheck(message)
+
                     
 
     @commands.Cog.listener()

@@ -386,7 +386,7 @@ class Events(MixinMeta):
             "OnlyFans Leaks",
         ]
         ad_keywords_string = ", ".join(ad_keywords)
-        prompt = f"你是一个语义分析助手,对输入的聊天消息进行分析,如果满足任意条件,返回Yes,否则返回No.条件1:消息涉及对中国(包含港澳台)政治问题的讨论.条件2:包含对其他聊天者的严重的人身攻击.条件3:涉及社工库等泄露个人敏感信息.条件4:消息大意与给出的广告语义库中的任一项相符.\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}"
+        prompt = f"你是一个语义分析助手,对输入的聊天消息进行分析,如果满足任意条件,返回Yes,否则返回No.条件1:消息涉及对中国(包含港澳台)政治问题的讨论.条件2:包含对其他聊天者的严重的人身攻击.条件3:涉及社工库(人肉搜索/开盒)等泄露个人敏感信息.条件4:加密货币宣传或诈骗.条件5:消息大意与给出的广告语义库中的任一项相符.\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}"
 
         try:
             response = client.chat.completions.create(
@@ -417,18 +417,20 @@ class Events(MixinMeta):
                 stats["msg_last_check_count"] += 1
                 if stats["msg_last_check_count"] >= 1:
                     mute_time = 2 ** (stats["msg_last_check_count"] -1)
+                    next_mute_time = 2 ** stats["msg_last_check_count"]
                     until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=mute_time)
                     await message.author.edit(timed_out_until=until, reason="[自动]语义分析")
                     if guild.id == 388227343862464513:
                         ntfcn = message.guild.get_channel(1162401982649204777)
                         # await ntfcn.send(f"[{message.author.mention} 的消息经语义分析识别为潜在的不适宜展示消息,已被禁言{mute_time}分钟.\n当前消息内容:```{message.content}```")
                     await message.delete()
-                    await message.channel.send(f"[测试阶段|试运行] {author.mention} 您的消息被识别为潜在的广告/恶意消息,已被禁言{mute_time}分钟.原始消息已私发给您.")
+                    await message.channel.send(f"[测试阶段|试运行] {author.mention} 的消息被识别为潜在的广告/恶意消息,已被禁言{mute_time}分钟.\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n原始消息已私发给您.")
 
-            try:
-                await author.send(f"您的消息被识别为潜在的广告或诈骗消息,已被删除.请勿发送任何诈骗信息.\n您的原始消息内容:```{message.content}```")
-            except discord.HTTPException:
-                pass
+                    try:
+                        if stats["msg_last_check_count"] == 1:
+                            await author.send(f"您的消息被识别为潜在的广告或诈骗消息\n本次禁言时间:{mute_time}分\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n您的原始消息内容:```{message.content}```")
+                    except discord.HTTPException:
+                        pass
             return True
         
         # await self.config.member_from_ids(guild.id, author.id).msg_last_check_time.set(current_time.isoformat())

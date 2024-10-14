@@ -424,7 +424,7 @@ class Events(MixinMeta):
                         ntfcn = message.guild.get_channel(1162401982649204777)
                         # await ntfcn.send(f"[{message.author.mention} 的消息经语义分析识别为潜在的不适宜展示消息,已被禁言{mute_time}分钟.\n当前消息内容:```{message.content}```")
                     await message.delete()
-                    await message.channel.send(f"[测试阶段|试运行] {author.mention} 的消息被识别为潜在的广告/恶意消息,已被禁言{mute_time}分钟.\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n原始消息已私发给您.")
+                    await message.channel.send(f"[测试阶段|语义分析] {author.mention} 的消息被归类为广告/诈骗/政治敏感/冒犯/隐私泄露,已被禁言{mute_time}分钟.\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n原始消息已私发给您.")
 
                     try:
                         if stats["msg_last_check_count"] == 1:
@@ -1014,8 +1014,6 @@ class Events(MixinMeta):
                     await self.urlsafecheck(message)
                     await self.filesafecheck(message)
                     await self.openaicheck(message)
-
-                    
 
     @commands.Cog.listener()
     async def on_message(self, message):

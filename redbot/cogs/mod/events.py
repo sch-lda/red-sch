@@ -104,7 +104,16 @@ class Events(MixinMeta):
                 channel=None,
             )
 
-
+    def isonlycontainsemoji(self, content):
+        emoji_pattern = r'<:.*?:\d+>'
+        traditional_emoji_pattern = re.compile(r'[\U0001F600-\U0001F64F]')
+        traditional_emoji = re.findall(traditional_emoji_pattern, content)
+        emojis = re.findall(emoji_pattern, content)
+        all_emojis = traditional_emoji + emojis
+        if len(all_emojis) == len(content):
+            return True
+        return False
+    
     async def check_duplicates(self, message):
         
         guild = message.guild
@@ -341,14 +350,15 @@ class Events(MixinMeta):
         rolebasic = guild.get_role(970624921514410064) #小航海
         await author.add_roles(rolebasic)
         await message.channel.send(f"{author.mention} 您没有任何身份组,已为您分配小航海组.")
-
+    
     async def openaicheck(self, message):
         guild, author = message.guild, message.author
         # if guild.id != 1056808446030250044:
         #     return
         if message.channel.id == 608951880403517470:
             return
-        
+        if self.isonlycontainsemoji(message.content):
+            return
         current_time = datetime.datetime.now(datetime.timezone.utc)
         last_check = await self.config.member_from_ids(guild.id, author.id).msg_last_check_time()
         if last_check != "":

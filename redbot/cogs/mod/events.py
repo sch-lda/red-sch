@@ -425,12 +425,15 @@ class Events(MixinMeta):
                     await message.author.edit(timed_out_until=until, reason="[自动]语义分析")
                     if guild.id == 388227343862464513:
                         ntfcn = message.guild.get_channel(1162401982649204777)
-                        # await ntfcn.send(f"[{message.author.mention} 的消息经语义分析识别为潜在的不适宜展示消息,已被禁言{mute_time}分钟.\n当前消息内容:```{message.content}```")
+                        # await ntfcn.send(f"[{message.author.mention} 的消息经语义分析识别为潜在的不适宜展示消息,已被禁言{mute_time}分钟.\n当前消息内容:```{messagecontent}```")
                     await message.delete()
+                    messagecontent = message.content
+                    if len(messagecontent) > 900:
+                        messagecontent = messagecontent[:900]
                     await message.channel.send(f"[测试阶段|语义分析] {author.mention} 的消息被归类为广告/诈骗/政治敏感/冒犯/隐私泄露,已被禁言{mute_time}分钟.\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n原始消息已私发给您.")
 
                     try:
-                        await author.send(f"您的消息被识别为潜在的广告或诈骗消息\n本次禁言时间:{mute_time}分\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n您的原始消息内容:```{message.content}```")
+                        await author.send(f"您的消息被识别为潜在的广告或诈骗消息\n本次禁言时间:{mute_time}分\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n您的原始消息内容:```{messagecontent}```")
                     except discord.HTTPException:
                         pass
             return True

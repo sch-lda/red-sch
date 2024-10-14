@@ -386,7 +386,7 @@ class Events(MixinMeta):
             "OnlyFans Leaks",
         ]
         ad_keywords_string = ", ".join(ad_keywords)
-        prompt = f"你是一个语义分析助手,对输入的聊天消息进行分析,如果满足任意条件,返回Yes,否则返回No.条件1:消息涉及对中国(包含港澳台)政治问题的讨论.条件2:包含对其他聊天者的严重的人身攻击.条件3:涉及社工库(人肉搜索/开盒)等泄露个人敏感信息.条件4:加密货币宣传或诈骗.条件5:消息大意与给出的广告语义库中的任一项相符.\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}"
+        prompt = f"你是一个语义分析助手,对输入的聊天消息进行分析,如果满足任意条件,返回Yes,否则返回No.条件1:消息涉及对中国(包含港澳台)政治问题的讨论.条件2:包含对其他聊天者的严重的侮辱.条件3:涉及社工库(人肉搜索/开盒)等泄露个人敏感信息.条件4:加密货币宣传或诈骗.条件5:消息大意与给出的广告语义库中的任一项相符.\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}"
 
         try:
             response = client.chat.completions.create(

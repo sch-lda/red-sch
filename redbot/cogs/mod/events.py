@@ -418,6 +418,9 @@ class Events(MixinMeta):
                 if stats["msg_last_check_count"] >= 1:
                     mute_time = 2 ** (stats["msg_last_check_count"] -1)
                     next_mute_time = 2 ** stats["msg_last_check_count"]
+                    if stats["msg_last_check_count"] > 14:
+                        mute_time = 32768
+                        next_mute_time = 32768
                     until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=mute_time)
                     await message.author.edit(timed_out_until=until, reason="[自动]语义分析")
                     if guild.id == 388227343862464513:

@@ -389,3 +389,12 @@ class ModInfo(MixinMeta):
         """Unshadow mute a member."""
         await self.config.user(member).shadow_mute.set(False)
         await ctx.send(f"{member.mention} has been unshadow muted.", delete_after=5)
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def clearbadrecords(self, ctx: commands.Context, *, member: discord.Member):
+        """清除所有违规记录."""
+        async with self.config.member_from_ids(ctx.guild.id, member.id).stats() as stats:
+            stats["msg_last_check_count"] = 0
+        await ctx.send(f"已清除{member.mention}的所有违规记录.")

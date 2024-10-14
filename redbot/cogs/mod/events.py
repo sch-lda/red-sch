@@ -359,11 +359,14 @@ class Events(MixinMeta):
             return
         if self.isonlycontainsemoji(message.content):
             return
+        if len(message.content.strip()) < 2:
+            return
+        
         current_time = datetime.datetime.now(datetime.timezone.utc)
         last_check = await self.config.member_from_ids(guild.id, author.id).msg_last_check_time()
         if last_check != "":
             last_check_f = datetime.datetime.fromisoformat(last_check)
-            if current_time - last_check_f < datetime.timedelta(minutes=5):
+            if current_time - last_check_f < datetime.timedelta(minutes=5) and author.id != 1090151704776933417:
                 # log.info(f"跳过对用户 {userid} 的msg检查,下次检查时间: {last_check_f + datetime.timedelta(hours=6)}")
                 return
         
@@ -383,7 +386,7 @@ class Events(MixinMeta):
             "OnlyFans Leaks",
         ]
         ad_keywords_string = ", ".join(ad_keywords)
-        prompt = f"这条聊天消息是否与广告词库的语义匹配,用Yes或No回答?\nAd keywords: {ad_keywords_string}\nMessage: {message.content}"
+        prompt = f"你是一个语义分析助手,对输入的聊天消息进行分析,如果满足任意条件,返回Yes,否则返回No.条件1:消息涉及对中国(包含港澳台)政治问题的讨论.条件2:包含对其他聊天者的严重的人身攻击.条件3:涉及社工库等泄露个人敏感信息.条件4:消息大意与给出的广告语义库中的任一项相符.\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}"
 
         try:
             response = client.chat.completions.create(
@@ -412,22 +415,23 @@ class Events(MixinMeta):
             await self.config.guild(guild).gpt_block_msg_count.set(block_times)
             async with self.config.member_from_ids(guild.id, author.id).stats() as stats:
                 stats["msg_last_check_count"] += 1
-                if stats["msg_last_check_count"] >= 3:
-                    until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60)
-                    await message.author.edit(timed_out_until=until, reason="[自动]潜在的广告机器人")
-                    stats["msg_last_check_count"] = 0
+                if stats["msg_last_check_count"] >= 1:
+                    mute_time = 2 ** (stats["msg_last_check_count"] -1)
+                    until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=mute_time)
+                    await message.author.edit(timed_out_until=until, reason="[自动]语义分析")
                     if guild.id == 388227343862464513:
                         ntfcn = message.guild.get_channel(1162401982649204777)
-                        await ntfcn.send(f"{message.author.mention} 被AI识别为潜在的广告机器人,已被禁言.请管理员人工审核.")
-            await message.delete()
-            await message.channel.send(f"{author.mention} 您的消息被识别为潜在的广告或诈骗消息")
+                        # await ntfcn.send(f"[{message.author.mention} 的消息经语义分析识别为潜在的不适宜展示消息,已被禁言{mute_time}分钟.\n当前消息内容:```{message.content}```")
+                    await message.delete()
+                    await message.channel.send(f"[测试阶段|试运行] {author.mention} 您的消息被识别为潜在的广告/恶意消息,已被禁言{mute_time}分钟.原始消息已私发给您.")
+
             try:
-                await author.send(f"您的消息被识别为潜在的广告或诈骗消息,已被删除.请勿发送任何诈骗信息.\n您的消息内容:```{message.content}```")
+                await author.send(f"您的消息被识别为潜在的广告或诈骗消息,已被删除.请勿发送任何诈骗信息.\n您的原始消息内容:```{message.content}```")
             except discord.HTTPException:
                 pass
             return True
         
-        await self.config.member_from_ids(guild.id, author.id).msg_last_check_time.set(current_time.isoformat())
+        # await self.config.member_from_ids(guild.id, author.id).msg_last_check_time.set(current_time.isoformat())
 
         return False
 

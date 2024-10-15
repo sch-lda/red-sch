@@ -352,6 +352,9 @@ class Events(MixinMeta):
         await message.channel.send(f"{author.mention} 您没有任何身份组,已为您分配小航海组.")
     
     async def openaicheck(self, message):
+        if not await self.config.guild(guild).aicheck():
+            return True
+        
         guild, author = message.guild, message.author
         # if guild.id != 1056808446030250044:
         #     return

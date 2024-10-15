@@ -531,3 +531,23 @@ class ModSettings(MixinMeta):
                 " have been deleted from Mod config."
             )
         )
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def toggleaicheck(self, ctx: commands.Context):
+        """Toggle AI check
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).aicheck()
+        if not toggled:
+            await self.config.guild(guild).aicheck.set(True)
+            await ctx.send(
+                _("消息实时语义分析已开启")
+            )
+        else:
+            await self.config.guild(guild).aicheck.set(False)
+            await ctx.send(
+                _("消息实时语义分析已关闭")
+            )

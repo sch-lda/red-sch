@@ -63,6 +63,7 @@ class Mod(
         "track_nicknames": True,
         "gpt_scan_msg_count": 0,
         "gpt_block_msg_count": 0,
+        "aicheck":True,
     }
 
     default_channel_settings = {"ignored": False}

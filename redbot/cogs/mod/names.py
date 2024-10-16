@@ -397,4 +397,4 @@ class ModInfo(MixinMeta):
         """清除所有违规记录."""
         async with self.config.member_from_ids(ctx.guild.id, member.id).stats() as stats:
             stats["msg_last_check_count"] = 0
-        await ctx.send(f"已清除{member.mention}的所有违规记录.")
+        await ctx.send(f"已将{member.mention}的触发NLP过滤的次数设置为0.下次触发过滤禁言时间设置为1分钟.")

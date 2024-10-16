@@ -551,3 +551,42 @@ class ModSettings(MixinMeta):
             await ctx.send(
                 _("消息实时语义分析已关闭")
             )
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def printnlpdb(self, ctx: commands.Context):
+        """Print NLP
+        """
+        with open('/home/azureuser/ad_keywords.txt', 'r', encoding='utf-8') as file:
+            ad_keywords = [line.strip() for line in file.readlines()]
+            ad_keywords_string = "\n".join(ad_keywords)
+        await ctx.send(ad_keywords_string)
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def nlpdbaddline(self, ctx: commands.Context, line: str):
+        """Add line to NLP
+        """
+        with open('/home/azureuser/ad_keywords.txt', 'r+', encoding='utf-8') as file:
+            old_ad_keywords = [line.strip() for line in file.readlines()]
+            new_ad_keywords = old_ad_keywords + [line]
+            file.seek(0)
+            file.truncate()
+            file.write("\n".join(new_ad_keywords))
+        await ctx.send(f"成功添加行: {line}")
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def nlpdbdelline(self, ctx: commands.Context, line: str):
+        """Delete line from NLP
+        """
+        with open('/home/azureuser/ad_keywords.txt', 'r+', encoding='utf-8') as file:
+            old_ad_keywords = [line.strip() for line in file.readlines()]
+            new_ad_keywords = [keyword for keyword in old_ad_keywords if keyword != line]
+            file.seek(0)
+            file.truncate()
+            file.write("\n".join(new_ad_keywords))
+        await ctx.send(f"成功删除行: {line}")

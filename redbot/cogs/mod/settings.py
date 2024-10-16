@@ -561,7 +561,11 @@ class ModSettings(MixinMeta):
         with open('/home/azureuser/ad_keywords.txt', 'r', encoding='utf-8') as file:
             ad_keywords = [line.strip() for line in file.readlines()]
             ad_keywords_string = "\n".join(ad_keywords)
-        await ctx.send(ad_keywords_string)
+        if len(ad_keywords_string) < 1800:
+            await ctx.send(f"读取到{len(ad_keywords)}行:\n```{ad_keywords_string}```")
+        else:
+            lean_ad_keywords_string = ad_keywords_string[:1500]
+            await ctx.send(f"读取到{len(ad_keywords)}行, 列表过长, 仅显示前1500字符:\n```{lean_ad_keywords_string}```")
 
     @commands.command()
     @commands.guild_only()

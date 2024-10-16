@@ -590,3 +590,13 @@ class ModSettings(MixinMeta):
             file.truncate()
             file.write("\n".join(new_ad_keywords))
         await ctx.send(f"成功删除行: {line}")
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def nlpfilterstats(self, ctx: commands.Context):
+        """NLP Filter Stats
+        """
+        scan_times = await self.config.guild(ctx.guild).gpt_scan_msg_count()
+        block_times = await self.config.guild(ctx.guild).gpt_block_msg_count()
+        await ctx.send(f"扫描消息总数: {scan_times}, 拦截次数: {block_times}")

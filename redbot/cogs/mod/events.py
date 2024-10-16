@@ -352,10 +352,9 @@ class Events(MixinMeta):
         await message.channel.send(f"{author.mention} 您没有任何身份组,已为您分配小航海组.")
     
     async def openaicheck(self, message):
+        guild, author = message.guild, message.author
         if not await self.config.guild(guild).aicheck():
             return True
-        
-        guild, author = message.guild, message.author
         # if guild.id != 1056808446030250044:
         #     return
         if message.channel.id == 608951880403517470:
@@ -382,14 +381,11 @@ class Events(MixinMeta):
             api_key = openai_api_key.get("api_key"),
             base_url = "https://gptoneapi.cc2077.site/v1"
         )
-        ad_keywords = [
-            "steam $50 gift",
-            "free nude/porn",
-            "free nitro",
-            "OnlyFans Leaks",
-        ]
+        with open('/home/azureuser/ad_keywords.txt', 'r', encoding='utf-8') as file:
+            ad_keywords = [line.strip() for line in file.readlines()]
+
         ad_keywords_string = ", ".join(ad_keywords)
-        prompt = f"你是一个语义分析助手,对输入的聊天消息进行分析,如果满足任意条件,返回Yes,否则返回No.条件1:消息涉及对中国(包含港澳台)政治问题的讨论.条件2:包含对其他聊天者的严重的侮辱.条件3:涉及社工库(人肉搜索/开盒)等泄露个人敏感信息.条件4:加密货币宣传或诈骗.条件5:消息大意与给出的广告语义库中的任一项相符.\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}"
+        prompt = f"你是一个语义分析助手,对输入的聊天消息进行分析,如果满足任意条件,返回yes,否则返回no.条件1:消息涉及对中国(包含港澳台)政治问题的讨论.条件2:包含对其他聊天者的严重的侮辱.条件3:涉及社工库(人肉搜索/开盒)等泄露个人敏感信息.条件4:加密货币宣传或诈骗.条件5:消息大意与给出的广告语义库(括号内的为注释)中的任一项相符.讨论或询问标注为P2C菜单名的软件都视为广告,注意区分stand/alpha等词作普通英文单词还是作软件名\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}"
 
         try:
             response = client.chat.completions.create(
@@ -412,7 +408,7 @@ class Events(MixinMeta):
 
         repstr = response.choices[0].message.content
         # await message.channel.send(f"AI检测结果: {repstr}")
-        if "yes" in repstr or "Yes" in repstr or "YES" in repstr:
+        if "yes" in repstr.lower():
             block_times = await self.config.guild(guild).gpt_block_msg_count()
             block_times += 1
             await self.config.guild(guild).gpt_block_msg_count.set(block_times)
@@ -433,7 +429,7 @@ class Events(MixinMeta):
                     messagecontent = message.content
                     if len(messagecontent) > 900:
                         messagecontent = messagecontent[:900]
-                    await message.channel.send(f"[测试阶段|语义分析] {author.mention} 的消息被归类为广告/诈骗/政治敏感/冒犯/隐私泄露,已被禁言{mute_time}分钟.\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n原始消息已私发给您.")
+                    await message.channel.send(f"[测试阶段|语义分析] {author.mention} 的消息被归类为广告/诈骗/政治敏感/冒犯/隐私泄露,已被禁言{mute_time}分钟.\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n原始消息已私发给您.管理员可使用&toggleaicheck关闭消息实时分析")
 
                     try:
                         await author.send(f"您的消息被识别为潜在的广告或诈骗消息\n本次禁言时间:{mute_time}分\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n您的原始消息内容:```{messagecontent}```")

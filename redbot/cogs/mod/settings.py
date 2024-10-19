@@ -554,6 +554,185 @@ class ModSettings(MixinMeta):
 
     @commands.command()
     @commands.guild_only()
+    @commands.is_owner()
+    async def modenableall(self, ctx: commands.Context):
+        """Enable all checks and features."""
+        guild = ctx.guild
+        await self.config.guild(guild).aicheck.set(True)
+        await self.config.guild(guild).pfcheck.set(True)
+        await self.config.guild(guild).markdowncheck.set(True)
+        await self.config.guild(guild).badmentioncheck.set(True)
+        await self.config.guild(guild).urlblacklistcheck.set(True)
+        await self.config.guild(guild).shadowmutecheck.set(True)
+        await self.config.guild(guild).affcheck.set(True)
+        await self.config.guild(guild).urlvtcheck.set(True)
+        await self.config.guild(guild).filevtcheck.set(True)
+        await self.config.guild(guild).autobaserole.set(True)
+        await self.config.guild(guild).editcheck.set(True)
+        await ctx.send(_("All checks and features have been enabled."))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def togglepfcheck(self, ctx: commands.Context):
+        """Toggle PF check
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).pfcheck()
+        if not toggled:
+            await self.config.guild(guild).pfcheck.set(True)
+            await ctx.send(_("PF check has been enabled."))
+        else:
+            await self.config.guild(guild).pfcheck.set(False)
+            await ctx.send(_("PF check has been disabled."))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def togglemarkdowncheck(self, ctx: commands.Context):
+        """Toggle Markdown check
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).markdowncheck()
+        if not toggled:
+            await self.config.guild(guild).markdowncheck.set(True)
+            await ctx.send(_("Markdown check has been enabled."))
+        else:
+            await self.config.guild(guild).markdowncheck.set(False)
+            await ctx.send(_("Markdown check has been disabled."))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def togglebadmentioncheck(self, ctx: commands.Context):
+        """Toggle Bad Mention check
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).badmentioncheck()
+        if not toggled:
+            await self.config.guild(guild).badmentioncheck.set(True)
+            await ctx.send(_("Bad Mention check has been enabled."))
+        else:
+            await self.config.guild(guild).badmentioncheck.set(False)
+            await ctx.send(_("Bad Mention check has been disabled."))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def toggleurlblacklistcheck(self, ctx: commands.Context):
+        """Toggle URL Blacklist check
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).urlblacklistcheck()
+        if not toggled:
+            await self.config.guild(guild).urlblacklistcheck.set(True)
+            await ctx.send(_("URL Blacklist check has been enabled."))
+        else:
+            await self.config.guild(guild).urlblacklistcheck.set(False)
+            await ctx.send(_("URL Blacklist check has been disabled."))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def toggleshadowmutecheck(self, ctx: commands.Context):
+        """Toggle Shadow Mute check
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).shadowmutecheck()
+        if not toggled:
+            await self.config.guild(guild).shadowmutecheck.set(True)
+            await ctx.send(_("Shadow Mute check has been enabled."))
+        else:
+            await self.config.guild(guild).shadowmutecheck.set(False)
+            await ctx.send(_("Shadow Mute check has been disabled."))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def toggleaffcheck(self, ctx: commands.Context):
+        """Toggle AFF check
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).affcheck()
+        if not toggled:
+            await self.config.guild(guild).affcheck.set(True)
+            await ctx.send(_("AFF check has been enabled."))
+        else:
+            await self.config.guild(guild).affcheck.set(False)
+            await ctx.send(_("AFF check has been disabled."))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def toggleurlvtcheck(self, ctx: commands.Context):
+        """Toggle URL VT check
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).urlvtcheck()
+        if not toggled:
+            await self.config.guild(guild).urlvtcheck.set(True)
+            await ctx.send(_("URL VT check has been enabled."))
+        else:
+            await self.config.guild(guild).urlvtcheck.set(False)
+            await ctx.send(_("URL VT check has been disabled."))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def togglefilevtcheck(self, ctx: commands.Context):
+        """Toggle File VT check
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).filevtcheck()
+        if not toggled:
+            await self.config.guild(guild).filevtcheck.set(True)
+            await ctx.send(_("File VT check has been enabled."))
+        else:
+            await self.config.guild(guild).filevtcheck.set(False)
+            await ctx.send(_("File VT check has been disabled."))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def toggleautobaserole(self, ctx: commands.Context):
+        """Toggle Auto Base Role
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).autobaserole()
+        if not toggled:
+            await self.config.guild(guild).autobaserole.set(True)
+            await ctx.send(_("Auto Base Role has been enabled."))
+        else:
+            await self.config.guild(guild).autobaserole.set(False)
+            await ctx.send(_("Auto Base Role has been disabled."))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def toggleeditcheck(self, ctx: commands.Context):
+        """Toggle Edit check
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).editcheck()
+        if not toggled:
+            await self.config.guild(guild).editcheck.set(True)
+            await ctx.send(_("Edit check has been enabled."))
+        else:
+            await self.config.guild(guild).editcheck.set(False)
+            await ctx.send(_("Edit check has been disabled."))
+
+    @commands.command()
+    @commands.guild_only()
     @commands.admin_or_permissions(manage_guild=True)
     async def printnlpdb(self, ctx: commands.Context):
         """Print NLP

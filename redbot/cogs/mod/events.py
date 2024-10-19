@@ -311,6 +311,10 @@ class Events(MixinMeta):
         return False
 
     async def affcodecheck(self, message):
+        isenabled = await self.config.guild(message.guild).affcheck()
+        if not isenabled:
+            return True
+
         guild, author = message.guild, message.author
         detect_list = ["affcode","register?code","guest/i","invite_code","?register=","?aff=","utm_content"]
 
@@ -319,6 +323,9 @@ class Events(MixinMeta):
                 await message.reply("检测到包含邀请参数的链接.链接所有者可能会从中获得邀请报酬,包括但不限于充值分成.机场的分享者应在说明后发送带邀请参数的链接,其他人应享有知情权,自愿参与.机场或服务的任何问题(信息泄露、跑路)与本server无关,无人能够担保,请自行甄别.\n如果您频繁发送或者在无人询问的情况下主动推广机场等付费资源,您将被警告甚至禁言.")
 
     async def autorole(self, message):
+        isenabled = await self.config.guild(message.guild).autobaserole()
+        if not isenabled:
+            return True
         guild, author = message.guild, message.author
         if guild.id != 388227343862464513:
             return
@@ -353,8 +360,10 @@ class Events(MixinMeta):
     
     async def openaicheck(self, message):
         guild, author = message.guild, message.author
-        if not await self.config.guild(guild).aicheck():
+        isenabled = await self.config.guild(message.guild).aicheck()
+        if not isenabled:
             return True
+
         # if guild.id != 1056808446030250044:
         #     return
         if message.channel.id == 608951880403517470:
@@ -532,6 +541,9 @@ class Events(MixinMeta):
         return False
     
     async def muteadacc(self, message: discord.Message):
+        isenabled = await self.config.guild(message.guild).pfcheck()
+        if not isenabled:
+            return True
         guildid = message.guild.id
         userid = message.author.id
         current_time = datetime.datetime.now(datetime.timezone.utc)
@@ -635,6 +647,9 @@ class Events(MixinMeta):
             await ntfcnsec.send(f"Bio解析模块疑似故障-HTTP ERROR:{response.status_code}")
 
     async def check_hidelinks(self, message: discord.Message):
+        isenabled = await self.config.guild(message.guild).markdowncheck()
+        if not isenabled:
+            return True
         guildid = message.guild.id
 
         pattern_hidelink = re.compile(r'\[([^\]]+)\]\((https?:\/\/[^\s]+) ?\)')
@@ -760,6 +775,9 @@ class Events(MixinMeta):
                 count_mk += 1
 
     async def checkurl(self, message: discord.Message):
+        isenabled = await self.config.guild(message.guild).urlblacklistcheck()
+        if not isenabled:
+            return True
         guildid = message.guild.id
 
         if "weixin110.qq.com" in message.content or "weixin.qq.com/g" in message.content or "u.wechat.com" in message.content or "jq.qq.com" in message.content or "qm.qq.com" in message.content or "group_code" in message.content or "qr.alipay.com" in message.content or "wxp://" in message.content or "discord.com/ra/" in message.content or "gg.gg/" in message.content or "u.to/" in message.content or "t.ly/" in message.content:
@@ -908,36 +926,48 @@ class Events(MixinMeta):
 
 
     async def filesafecheck(self, message: discord.Message):
-            if len(message.attachments) > 0:
-                for attachment in message.attachments:
-                    file_path = f'/home/azureuser/bot_tmp/atc/{attachment.filename}'
-                    if attachment.content_type == None:
-                        return
-                    if attachment.content_type.startswith("image") or attachment.content_type.startswith("text") or attachment.content_type.startswith("audio") or attachment.content_type.startswith("video"):
-                        return
-                    await attachment.save(file_path)
-                    if os.path.getsize(file_path) > 30 * 1024 * 1024:
-                        os.remove(file_path)
-                        return
-            
-                    await self.VT_file_scan(file_path, message)
+        isenabled = await self.config.guild(message.guild).filevtcheck()
+        if not isenabled:
+            return True
+
+        if len(message.attachments) > 0:
+            for attachment in message.attachments:
+                file_path = f'/home/azureuser/bot_tmp/atc/{attachment.filename}'
+                if attachment.content_type == None:
+                    return
+                if attachment.content_type.startswith("image") or attachment.content_type.startswith("text") or attachment.content_type.startswith("audio") or attachment.content_type.startswith("video"):
+                    return
+                await attachment.save(file_path)
+                if os.path.getsize(file_path) > 30 * 1024 * 1024:
+                    os.remove(file_path)
+                    return
+        
+                await self.VT_file_scan(file_path, message)
     
     async def urlsafecheck(self, message: discord.Message):
-                content = message.content
-                urlpattern = r"(https?://\S+)"
-                urls = re.findall(urlpattern, content)
-                for url in urls:
-                    if url.startswith("https://t.me/GTA5OnlineToolsPornVideo/"):
-                        continue
-                    domainpre = tldextract.extract(url).domain
-                    suffix = tldextract.extract(url).suffix
-                    domain = domainpre + "." + suffix
-                    if domain == "github.com" or domain == "youtube.com" or domain == "youtu.be" or domain == "bilibili.com" or domain == "b23.tv" or domain == "githubusercontent.com" or domain == "discord.com" or domain == "discord.gg" or domain == "123pan.com" or domain == "host3650.live" or domain == "microsoft.com" or domain == "unknowncheats" or domain == "wikipedia.org" or domain == "vxtwitter.com" or domain == "twitter.com" or domain == "x.com" or domain == "crazyzhang.cn" or domain == "discordapp.com":
-                        continue
-                    self.mthread1 = threading.Thread(target=self.call_async_VT_url_scan, args=(url, message))
-                    self.mthread1.start()
+        isenabled = await self.config.guild(message.guild).urlvtcheck()
+        if not isenabled:
+            return True
+
+        content = message.content
+        urlpattern = r"(https?://\S+)"
+        urls = re.findall(urlpattern, content)
+        for url in urls:
+            if url.startswith("https://t.me/GTA5OnlineToolsPornVideo/"):
+                continue
+            domainpre = tldextract.extract(url).domain
+            suffix = tldextract.extract(url).suffix
+            domain = domainpre + "." + suffix
+            if domain == "github.com" or domain == "youtube.com" or domain == "youtu.be" or domain == "bilibili.com" or domain == "b23.tv" or domain == "githubusercontent.com" or domain == "discord.com" or domain == "discord.gg" or domain == "123pan.com" or domain == "host3650.live" or domain == "microsoft.com" or domain == "unknowncheats" or domain == "wikipedia.org" or domain == "vxtwitter.com" or domain == "twitter.com" or domain == "x.com" or domain == "crazyzhang.cn" or domain == "discordapp.com":
+                continue
+            self.mthread1 = threading.Thread(target=self.call_async_VT_url_scan, args=(url, message))
+            self.mthread1.start()
 
     async def check_ping_everyone_here(self, message: discord.Message):
+        isenabled = await self.config.guild(message.guild).badmentioncheck()
+        if not isenabled:
+            return True
+
         if "@everyone" in message.content or "@here" in message.content:
 
             if message.guild.id == 388227343862464513:
@@ -966,6 +996,10 @@ class Events(MixinMeta):
             return True
 
     async def shadowfunc(self, message: discord.Message):
+        isenabled = await self.config.guild(message.guild).shadowmutecheck()
+        if not isenabled:
+            return True
+
         # check shadow mute
         ifshadowmute = await self.config.user(message.author).shadow_mute()
         if ifshadowmute:
@@ -982,6 +1016,10 @@ class Events(MixinMeta):
  
     @commands.Cog.listener()
     async def on_message_edit(self, _prior, message):
+        isenabled = await self.config.guild(message.guild).editcheck()
+        if not isenabled:
+            return True
+
         if _prior.content == message.content:
             return
         author = message.author

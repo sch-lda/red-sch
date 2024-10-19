@@ -64,6 +64,16 @@ class Mod(
         "gpt_scan_msg_count": 0,
         "gpt_block_msg_count": 0,
         "aicheck":True,
+        "pfcheck":True,
+        "markdowncheck":True,
+        "badmentioncheck":True,
+        "urlblacklistcheck":True,
+        "shadowmutecheck":True,
+        "affcheck":True,
+        "urlvtcheck":True,
+        "filevtcheck":True,
+        "autobaserole":True,
+        "editcheck":True,
     }
 
     default_channel_settings = {"ignored": False}

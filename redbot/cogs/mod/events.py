@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 from collections import defaultdict, deque
 from typing import List, Optional
@@ -585,14 +586,9 @@ class Events(MixinMeta):
                 guildbio = json_result["guild_member"]["bio"]
                 userpronouns = json_result["user_profile"]["pronouns"]
                 guildpronouns = json_result["guild_member_profile"]["pronouns"]
-                
-                keywords_to_include = [
-                '招代理', '购买', '辅助', '黑号', '白号', '代購', '身份证','外挂', 'reseller', '经销','輔助','自喵','抽獎','抽奖','買東西','cheat','gtaxmenu','ezmod','modz.com','hzmod','qlmenu','Q群', '🐧','nitro','stand-','便宜','下单','自助',
-                '代理', '总代', '诚招','合作', '加盟','誠信','實惠','工作室','小店','售后','販賣','买就去','闲鱼','淘宝','店铺','代练','代打','发卡','卡网','團隊','顧問','微信','distri','dealer','入代','賣場','蝦皮','小铺','团队',
-                '一起赚钱', '转售菜单', '转售辅助', '卖家', '入代私聊', '科技', '經銷', '低價', 'gta5辅助', 'gta5菜单', 'gta5外挂', 'gta5模组', 'gta辅助', 'gta菜单', 'gta外挂', 'gta模组', '卖gta', '销售',
-                'shop', 'cheapest', 'store', 'cheapest', 'store', '商业合作', 'titan', '2take1', 'Frieza','fikit', 'fortitude','Nightfall','paypal', 'erebus'
-                ]
-
+                with open('/home/azureuser/.local/share/Red-DiscordBot/data/sch/cogs/Mod/pf_keywords.json', 'r', encoding='utf-8') as file:
+                    data = json.load(file)
+                keywords_to_include = data['keywords_to_include']
                 if guildpronouns:
                     s_guildpronouns = guildpronouns.lower()
                 else:

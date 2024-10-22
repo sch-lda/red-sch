@@ -390,7 +390,7 @@ class Events(MixinMeta):
             api_key = openai_api_key.get("api_key"),
             base_url = "https://gptoneapi.cc2077.site/v1"
         )
-        with open('/home/azureuser/ad_keywords.txt', 'r', encoding='utf-8') as file:
+        with open('/home/azureuser/.local/share/Red-DiscordBot/data/sch/cogs/Mod/ad_keywords.txt', 'r', encoding='utf-8') as file:
             ad_keywords = [line.strip() for line in file.readlines()]
 
         ad_keywords_string = ", ".join(ad_keywords)

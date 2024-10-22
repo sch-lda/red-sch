@@ -737,7 +737,7 @@ class ModSettings(MixinMeta):
     async def printnlpdb(self, ctx: commands.Context):
         """Print NLP
         """
-        with open('/home/azureuser/ad_keywords.txt', 'r', encoding='utf-8') as file:
+        with open('/home/azureuser/.local/share/Red-DiscordBot/data/sch/cogs/Mod/ad_keywords.txt', 'r', encoding='utf-8') as file:
             ad_keywords = [line.strip() for line in file.readlines()]
             ad_keywords_string = "\n".join(ad_keywords)
         if len(ad_keywords_string) < 1800:
@@ -752,7 +752,7 @@ class ModSettings(MixinMeta):
     async def nlpdbaddline(self, ctx: commands.Context, line: str):
         """Add line to NLP
         """
-        with open('/home/azureuser/ad_keywords.txt', 'r+', encoding='utf-8') as file:
+        with open('/home/azureuser/.local/share/Red-DiscordBot/data/sch/cogs/Mod/ad_keywords.txt', 'r+', encoding='utf-8') as file:
             old_ad_keywords = [line.strip() for line in file.readlines()]
             new_ad_keywords = old_ad_keywords + [line]
             file.seek(0)
@@ -766,7 +766,7 @@ class ModSettings(MixinMeta):
     async def nlpdbdelline(self, ctx: commands.Context, line: str):
         """Delete line from NLP
         """
-        with open('/home/azureuser/ad_keywords.txt', 'r+', encoding='utf-8') as file:
+        with open('/home/azureuser/.local/share/Red-DiscordBot/data/sch/cogs/Mod/ad_keywords.txt', 'r+', encoding='utf-8') as file:
             old_ad_keywords = [line.strip() for line in file.readlines()]
             new_ad_keywords = [keyword for keyword in old_ad_keywords if keyword != line]
             file.seek(0)

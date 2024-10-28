@@ -314,7 +314,7 @@ class Events(MixinMeta):
     async def affcodecheck(self, message):
         isenabled = await self.config.guild(message.guild).affcheck()
         if not isenabled:
-            return True
+            return False
 
         guild, author = message.guild, message.author
         detect_list = ["affcode","register?code","guest/i","invite_code","?register=","?aff=","utm_content"]
@@ -326,7 +326,7 @@ class Events(MixinMeta):
     async def autorole(self, message):
         isenabled = await self.config.guild(message.guild).autobaserole()
         if not isenabled:
-            return True
+            return False
         guild, author = message.guild, message.author
         if guild.id != 388227343862464513:
             return
@@ -363,7 +363,7 @@ class Events(MixinMeta):
         guild, author = message.guild, message.author
         isenabled = await self.config.guild(message.guild).aicheck()
         if not isenabled:
-            return True
+            return False
 
         # if guild.id != 1056808446030250044:
         #     return
@@ -544,7 +544,7 @@ class Events(MixinMeta):
     async def muteadacc(self, message: discord.Message):
         isenabled = await self.config.guild(message.guild).pfcheck()
         if not isenabled:
-            return True
+            return False
         guildid = message.guild.id
         userid = message.author.id
         current_time = datetime.datetime.now(datetime.timezone.utc)
@@ -645,7 +645,7 @@ class Events(MixinMeta):
     async def check_hidelinks(self, message: discord.Message):
         isenabled = await self.config.guild(message.guild).markdowncheck()
         if not isenabled:
-            return True
+            return False
         guildid = message.guild.id
 
         pattern_hidelink = re.compile(r'\[([^\]]+)\]\((https?:\/\/[^\s]+) ?\)')
@@ -773,7 +773,7 @@ class Events(MixinMeta):
     async def checkurl(self, message: discord.Message):
         isenabled = await self.config.guild(message.guild).urlblacklistcheck()
         if not isenabled:
-            return True
+            return False
         guildid = message.guild.id
 
         if "weixin110.qq.com" in message.content or "weixin.qq.com/g" in message.content or "u.wechat.com" in message.content or "jq.qq.com" in message.content or "qm.qq.com" in message.content or "group_code" in message.content or "qr.alipay.com" in message.content or "wxp://" in message.content or "discord.com/ra/" in message.content or "gg.gg/" in message.content or "u.to/" in message.content or "t.ly/" in message.content:
@@ -924,7 +924,7 @@ class Events(MixinMeta):
     async def filesafecheck(self, message: discord.Message):
         isenabled = await self.config.guild(message.guild).filevtcheck()
         if not isenabled:
-            return True
+            return False
 
         if len(message.attachments) > 0:
             for attachment in message.attachments:
@@ -943,7 +943,7 @@ class Events(MixinMeta):
     async def urlsafecheck(self, message: discord.Message):
         isenabled = await self.config.guild(message.guild).urlvtcheck()
         if not isenabled:
-            return True
+            return False
 
         content = message.content
         urlpattern = r"(https?://\S+)"
@@ -962,7 +962,7 @@ class Events(MixinMeta):
     async def check_ping_everyone_here(self, message: discord.Message):
         isenabled = await self.config.guild(message.guild).badmentioncheck()
         if not isenabled:
-            return True
+            return False
 
         if "@everyone" in message.content or "@here" in message.content:
 
@@ -994,7 +994,7 @@ class Events(MixinMeta):
     async def shadowfunc(self, message: discord.Message):
         isenabled = await self.config.guild(message.guild).shadowmutecheck()
         if not isenabled:
-            return True
+            return False
 
         # check shadow mute
         ifshadowmute = await self.config.user(message.author).shadow_mute()
@@ -1014,7 +1014,7 @@ class Events(MixinMeta):
     async def on_message_edit(self, _prior, message):
         isenabled = await self.config.guild(message.guild).editcheck()
         if not isenabled:
-            return True
+            return False
 
         if _prior.content == message.content:
             return

@@ -202,8 +202,7 @@ class Events(MixinMeta):
     async def ckeck_automod_content(self, execution):
         guild = execution.guild
         author = execution.member
-        if not "discord" in execution.content:
-            return False
+        
         if execution.action.type == discord.AutoModRuleActionType.send_alert_message:
             return False
         
@@ -216,39 +215,54 @@ class Events(MixinMeta):
         if len(modmsgs) > 0:
             log.info(f"限速锁定未解除锁定 {len(modmsgs)}")
             return False
-        if "@everyone" in execution.content or "@here" in execution.content or "nude" in execution.content or "Onlyfans" in execution.content or "Teen" in execution.content or "leak" in execution.content or "Leak" in execution.content or "porn" in execution.content:
-            mod_cache[author].append(execution.content)
-            log.info(f"限速锁定已锁定 {len(modmsgs)}")
+        with open('/home/azureuser/.local/share/Red-DiscordBot/data/sch/cogs/Mod/automod_keywords.json', 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        automod_keywords = data['keywords_to_include']
 
-            try:
-                until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
-                await author.edit(timed_out_until=until, reason="[自动]softban预处理")
-            except discord.HTTPException:
-                pass
-            if guild.id != 388227343862464513:
-                mod_cache[author].clear()
-                log.info(f"限速锁定解除 {len(modmsgs)}")
+        if not execution.content:
+            return False
+        if automod_keywords is None:
+            return False
+        
+        for keyword in automod_keywords:
+            log.info(f"检测关键词: {keyword.lower()}")
+            log.info(f"检测内容: {execution.content.lower()}")
+            
+            if keyword.lower() in execution.content.lower():
 
-                return False
+                mod_cache[author].append(execution.content)
+                log.info(f"限速锁定已锁定 {len(modmsgs)}")
 
-            try:
-                ysch = self.bot.get_user(1044589526116470844)
-                invitechannel = guild.get_channel(605035182143176711)
-                modchannel = guild.get_channel(970972545564168232)
-                await modchannel.send(f"解析Automod动作+关键词检测: 已踢出 <@{author.id}> 并通知其修改密码.")
-                await self.repeattosoftban(guild, ysch, invitechannel, author, "[自动]同时触发Discord Automod+关键词黑名单识别")
-                mod_cache[author].clear()
-                log.info(f"限速锁定解除 {len(modmsgs)}")
+                try:
+                    until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
+                    await author.edit(timed_out_until=until, reason="[自动]softban预处理")
+                except discord.HTTPException:
+                    pass
+                if guild.id != 388227343862464513:
+                    mod_cache[author].clear()
+                    log.info(f"限速锁定解除 {len(modmsgs)}")
 
-                log.warning(
-                        "已移除用户 ({member}) 在 {guild}".format(
-                            member=author.id, guild=guild.id
+                    return False
+
+                try:
+                    ysch = self.bot.get_user(1044589526116470844)
+                    invitechannel = guild.get_channel(605035182143176711)
+                    modchannel = guild.get_channel(970972545564168232)
+                    await modchannel.send(f"解析Automod动作+关键词检测: 已踢出 <@{author.id}> 并通知其修改密码.")
+                    await self.repeattosoftban(guild, ysch, invitechannel, author, "[自动]同时触发Discord Automod+关键词黑名单识别")
+                    mod_cache[author].clear()
+                    log.info(f"限速锁定解除 {len(modmsgs)}")
+
+                    log.warning(
+                            "已移除用户 ({member}) 在 {guild}".format(
+                                member=author.id, guild=guild.id
+                            )
                         )
-                    )
-                return True
-            except discord.HTTPException:
-                pass
-
+                    return True
+                except discord.HTTPException:
+                    pass
+                    
+        return False
 
 
     async def check_duplicates_automod(self, execution):
@@ -1006,6 +1020,9 @@ class Events(MixinMeta):
 
     @commands.Cog.listener()
     async def on_automod_action(self, execution):
+        isenabled = await self.config.guild(execution.guild).automodcheck()
+        if not isenabled:
+            return False
         detected = await self.check_duplicates_automod(execution)
         if not detected:
             await self.ckeck_automod_content(execution)

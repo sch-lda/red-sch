@@ -569,6 +569,7 @@ class ModSettings(MixinMeta):
         await self.config.guild(guild).filevtcheck.set(True)
         await self.config.guild(guild).autobaserole.set(True)
         await self.config.guild(guild).editcheck.set(True)
+        await self.config.guild(guild).automodcheck.set(True)
         await ctx.send(_("All checks and features have been enabled."))
 
     @commands.command()
@@ -730,6 +731,22 @@ class ModSettings(MixinMeta):
         else:
             await self.config.guild(guild).editcheck.set(False)
             await ctx.send(_("Edit check has been disabled."))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def toggleautomodcheck(self, ctx: commands.Context):
+        """Toggle automodcheck check
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).automodcheck()
+        if not toggled:
+            await self.config.guild(guild).automodcheck.set(True)
+            await ctx.send(_("automodcheck check has been enabled."))
+        else:
+            await self.config.guild(guild).automodcheck.set(False)
+            await ctx.send(_("automodcheck check has been disabled."))
 
     @commands.command()
     @commands.guild_only()

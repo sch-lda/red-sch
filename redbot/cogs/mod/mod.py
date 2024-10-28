@@ -74,6 +74,7 @@ class Mod(
         "filevtcheck":True,
         "autobaserole":True,
         "editcheck":True,
+        "automodcheck":True,
     }
 
     default_channel_settings = {"ignored": False}

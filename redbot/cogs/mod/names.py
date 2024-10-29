@@ -398,3 +398,18 @@ class ModInfo(MixinMeta):
         async with self.config.member_from_ids(ctx.guild.id, member.id).stats() as stats:
             stats["msg_last_check_count"] = 0
         await ctx.send(f"已将{member.mention}的触发NLP过滤的次数设置为0.下次触发过滤禁言时间设置为1分钟.")
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def addbadrecords(self, ctx: commands.Context, member: discord.Member, *, increase: int):
+        """增加违规记录."""
+        async with self.config.member_from_ids(ctx.guild.id, member.id).stats() as stats:
+            stats["msg_last_check_count"] = stats["msg_last_check_count"] + increase
+        new_bad_records = stats["msg_last_check_count"]
+        new_mute_time = 2 ** (new_bad_records - 1)
+        await ctx.send(f"已将{member.mention}的触发NLP过滤的次数增加{increase}.\n下次触发过滤禁言时间设置为{new_mute_time}分钟.")
+        try:
+            await member.send(f"您的恶意指数被管理员增加{increase}.\n下次触发过滤禁言时间设置为{new_mute_time}分钟.\n前往Dashboard查看详情并通过完成挑战自助降低恶意指数(仅对符合条件的账户开放).\nhttps://redrpcapi.cc2077.site/")
+        except:
+            pass

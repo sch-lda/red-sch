@@ -130,7 +130,7 @@ class Events(MixinMeta):
         if not message.content:
             return False
             # Off-topic # 频道公告 # mod-only # 规则
-        if channel.id == 976462395427921940 or channel.id == 608168595314180106 or channel.id == 970972545564168232 or channel.id == 877000289146798151:
+        if channel.id == 608168595314180106 or channel.id == 970972545564168232 or channel.id == 877000289146798151:
         
             return False
 
@@ -404,6 +404,9 @@ class Events(MixinMeta):
             return
         if len(message.content.strip()) < 2:
             return
+        channel = message.channel
+        if channel.id == 703228036157538364:
+            return
         
         current_time = datetime.datetime.now(datetime.timezone.utc)
         last_check = await self.config.member_from_ids(guild.id, author.id).msg_last_check_time()
@@ -461,7 +464,7 @@ class Events(MixinMeta):
             await self.config.guild(guild).gpt_block_msg_count.set(block_times)
             async with self.config.member_from_ids(guild.id, author.id).stats() as stats:
                 stats["msg_last_check_count"] += 1
-                if stats["msg_last_check_count"] >= 1:
+                if stats["msg_last_check_count"] >= -2:
                     mute_time = 2 ** (stats["msg_last_check_count"] -1)
                     next_mute_time = 2 ** stats["msg_last_check_count"]
                     if stats["msg_last_check_count"] > 14:

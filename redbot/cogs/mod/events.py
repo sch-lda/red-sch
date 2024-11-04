@@ -20,6 +20,7 @@ import multiprocessing
 import time
 import threading
 from openai import OpenAI
+import aiohttp
 
 _ = i18n.Translator("Mod", __file__)
 log = logging.getLogger("red.mod")
@@ -373,20 +374,40 @@ class Events(MixinMeta):
         await author.add_roles(rolebasic)
         await message.channel.send(f"{author.mention} 您没有任何身份组,已为您分配小航海组.")
 
-    async def openai_request(self, client, prompt) -> Optional[str]:
+    async def openai_request(self, modelstr, prompt) -> Optional[str]:
 
         try:
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                max_tokens=50,
-                messages=[
+            openai_api_key = await self.bot.get_shared_api_tokens("openai")
+            if openai_api_key.get("api_key") is None:
+                log.info("OpenAI API Key 未设置")
+                return None
+            
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {openai_api_key.get("api_key")}'
+            }
+
+            data = {
+                "model": modelstr,
+                "messages": [
                     {
-                    "role": "user",
-                    "content": prompt,
-                    },
-                ],
-            )
-            return response
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            }
+
+            # 发送请求到 OpenAI API
+            async with aiohttp.ClientSession() as session:
+                async with session.post('https://gptoneapi.cc2077.site/v1/chat/completions', headers=headers, json=data) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        response_text = result['choices'][0]['message']['content'].strip()
+                        return response_text
+                    else:
+                        log.info(f"{modelstr} 请求失败: {response}")
+                        return None
+                    
         except Exception as e:
             return None
 
@@ -419,12 +440,6 @@ class Events(MixinMeta):
         openai_api_key = await self.bot.get_shared_api_tokens("openai")
         if openai_api_key.get("api_key") is None:
             return
-        client = OpenAI(
-            # This is the default and can be omitted
-
-            api_key = openai_api_key.get("api_key"),
-            base_url = "https://gptoneapi.cc2077.site/v1"
-        )
         with open('/home/azureuser/.local/share/Red-DiscordBot/data/sch/cogs/Mod/ad_keywords.txt', 'r', encoding='utf-8') as file:
             ad_keywords = [line.strip() for line in file.readlines()]
 
@@ -432,17 +447,12 @@ class Events(MixinMeta):
         prompt = f"你是一个语义分析助手,对输入的聊天消息进行分析,如果满足任意条件,返回yes,否则返回no.条件1:消息涉及对中国(包含港澳台)政治问题的讨论.条件2:包含对其他聊天者的严重的侮辱.条件3:涉及社工库(人肉搜索/开盒)等泄露个人敏感信息.条件4:加密货币宣传或诈骗.条件5:消息大意与给出的广告语义库(括号内的为注释)中的任一项相符.讨论或询问标注为P2C菜单名的软件都视为广告,注意区分stand/alpha等词作普通英文单词还是作软件名\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}"
 
         for attempt in range(3):
-            response = await self.openai_request(client, prompt)
-            try:
-                repstr = response.choices[0].message.content
-            except:
-                log.info(f"gpt请求失败-失败次数{attempt + 1}")
-                continue
-            if repstr is None:
+            response = await self.openai_request("gpt-4o-mini", prompt)
+            if response is None:
                 log.info(f"gpt请求失败-失败次数{attempt + 1}")
                 continue
             try:
-                lowerstr = repstr.lower()
+                lowerstr = response.lower()
             except:
                 log.info(f"gpt请求失败-失败次数{attempt + 1}")
                 continue
@@ -458,7 +468,38 @@ class Events(MixinMeta):
         scan_times += 1
         await self.config.guild(guild).gpt_scan_msg_count.set(scan_times)
 
-        if "yes" in repstr.lower():
+        if "yes" in response.lower():
+            attempt2 = 0
+            recheck = "no"
+
+            for attempt2 in range(3):
+                response2 = await self.openai_request("mistral-large-latest", prompt)
+                if response2 is None:
+                    log.info(f"mistral请求失败-失败次数{attempt2 + 1}")
+                    continue
+                try:
+                    lowerstr2 = response2.lower()
+                except:
+                    log.info(f"mistral请求失败-失败次数{attempt2 + 1}")
+                    continue
+                if not "yes" in lowerstr2 and not "no" in lowerstr2:
+                    log.info(f"mistral请求失败-失败次数{attempt2 + 1}")
+                    recheck = "yes"
+                    continue
+                else:
+                    recheck = lowerstr2
+                    break
+            else:
+                log.info("mistral请求失败")
+
+            log.info(f"mistral检查结果: {lowerstr2}")
+
+            if not "yes" in recheck:
+                await message.channel.send(f"[测试阶段|语义分析] {author.mention} 的消息被归类为广告/诈骗/政治敏感/冒犯/隐私泄露,此结果未通过复核,仅供参考", delete_after=3600)
+                return False
+            else:
+                log.info("Mistral检查通过yes")
+            
             block_times = await self.config.guild(guild).gpt_block_msg_count()
             block_times += 1
             await self.config.guild(guild).gpt_block_msg_count.set(block_times)

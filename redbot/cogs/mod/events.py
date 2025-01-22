@@ -117,28 +117,27 @@ class Events(MixinMeta):
         return False
     
     async def fetch_forwards(self, message):
-        if message.flags.value == 16384:
-            reference = message.reference
-            if reference is not None:
-                ref_channel = self.bot.get_channel(reference.channel_id)
-                if ref_channel is None:
-                    await message.delete()
-                    await message.channel.send(f"<@{message.author.id}>.Discord ID:({message.author.id}),请勿转发来自私聊或其他服务器的消息,bot无法对消息内容进行审核.")
-                    log.info(f"转发消息获取失败: {message}")
-                    return None
-                if ref_channel.guild.id != message.guild.id:
-                    await message.delete()
-                    await message.channel.send(f"<@{message.author.id}>.Discord ID:({message.author.id}),请勿转发来自私聊或其他服务器的消息,bot无法对消息内容进行审核.")
-                    return None
-                ref_msg = await ref_channel.fetch_message(reference.message_id)
-                if ref_msg is not None:
-                    return ref_msg
-                else:
-                    log.info(f"转发消息获取失败: {message}")
-                    return None
+        reference = message.reference
+        if reference is not None:
+            ref_channel = self.bot.get_channel(reference.channel_id)
+            if ref_channel is None:
+                await message.delete()
+                await message.channel.send(f"<@{message.author.id}>.Discord ID:({message.author.id}),检测到bot无权限读取的内容，可能是来自私聊或其他服务器的消息，已删除.")
+                log.info(f"转发消息获取失败: {message}")
+                return None
+            if ref_channel.guild.id != message.guild.id:
+                await message.delete()
+                await message.channel.send(f"<@{message.author.id}>.Discord ID:({message.author.id}),检测到bot无权限读取的内容，可能是来自私聊或其他服务器的消息，已删除.")
+                return None
+            ref_msg = await ref_channel.fetch_message(reference.message_id)
+            if ref_msg is not None:
+                return ref_msg
             else:
                 log.info(f"转发消息获取失败: {message}")
                 return None
+        else:
+            log.info(f"转发消息获取失败: {message}")
+            return None
         return None
         
     async def check_duplicates(self, message):

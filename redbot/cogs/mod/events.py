@@ -445,7 +445,7 @@ class Events(MixinMeta):
 
         ad_keywords_string = ", ".join(ad_keywords)
         # prompt = f"你是一个语义分析助手,对输入的聊天消息进行分析,如果满足任意条件,返回yes,否则返回no.条件1:消息涉及对中国(包含港澳台)政治问题的讨论.条件2:包含对其他聊天者的严重的侮辱.条件3:涉及社工库(人肉搜索/开盒)等泄露个人敏感信息.条件4:加密货币宣传或诈骗.条件5:消息大意与给出的广告语义库(括号内的为注释)中的任一项相符.讨论或询问标注为P2C菜单名的软件都视为广告,注意区分stand/alpha等词作普通英文单词还是作软件名\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}"
-        prompt = f"我是语义分析助手\n我只做一件事\n对输入的聊天消息进行蛛丝马迹分析\n我总是只会输出yes or no 取决于文本是否符合以下任意条件\m我需要在语义中寻找(中国政治)(严重的侮辱)(社工库 个人信息泄露)(加密货币)(广告语义库中的任一项)(P2C菜单软件)\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}" # lqlinovo's version
+        prompt = f"我是语义分析助手\n我只做一件事\n对输入的聊天消息进行蛛丝马迹分析\n我总是只会输出yes or no 取决于文本是否符合以下任意条件\n我需要在语义中寻找(中国政治)(严重的侮辱)(社工库 个人信息泄露)(加密货币)(广告语义库中的任一项)(P2C菜单软件)\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}" # lqlinovo's version
 
         for attempt in range(3):
             response = await self.openai_request("gpt-4o-mini", prompt)

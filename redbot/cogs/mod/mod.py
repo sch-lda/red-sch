@@ -67,6 +67,7 @@ class Mod(
         "aicheck":True,
         "pfcheck":True,
         "markdowncheck":True,
+        "qrcodecheck":True,
         "badmentioncheck":True,
         "urlblacklistcheck":True,
         "shadowmutecheck":True,

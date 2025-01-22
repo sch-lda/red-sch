@@ -804,6 +804,10 @@ class Events(MixinMeta):
         return False
 
     async def decodeqr(self, message: discord.Message):
+        isenabled = await self.config.guild(message.guild).qrcodecheck()
+        if not isenabled:
+            return False
+        
         guildid = message.guild.id
         if guildid != 388227343862464513:
             return
@@ -1171,7 +1175,7 @@ class Events(MixinMeta):
             if not deleted:
                 deleted = await self.check_ping_everyone_here(message)
                 if not deleted:
-                    # await self.decodeqr(message)
+                    await self.decodeqr(message)
                     deleted = await self.checkurl(message)
                     if not deleted:
                         deleted = await self.shadowfunc(message)

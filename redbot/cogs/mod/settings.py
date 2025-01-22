@@ -584,6 +584,7 @@ class ModSettings(MixinMeta):
         await self.config.guild(guild).aicheck.set(True)
         await self.config.guild(guild).pfcheck.set(True)
         await self.config.guild(guild).markdowncheck.set(True)
+        await self.config.guild(guild).qrcodecheck.set(True)
         await self.config.guild(guild).badmentioncheck.set(True)
         await self.config.guild(guild).urlblacklistcheck.set(True)
         await self.config.guild(guild).shadowmutecheck.set(True)
@@ -626,6 +627,22 @@ class ModSettings(MixinMeta):
         else:
             await self.config.guild(guild).markdowncheck.set(False)
             await ctx.send(_("Markdown check has been disabled."))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def toggleqrcodecheck(self, ctx: commands.Context):
+        """Toggle QR Code check
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).qrcodecheck()
+        if not toggled:
+            await self.config.guild(guild).qrcodecheck.set(True)
+            await ctx.send(_("QR Code check has been enabled."))
+        else:
+            await self.config.guild(guild).qrcodecheck.set(False)
+            await ctx.send(_("QR Code check has been disabled."))
 
     @commands.command()
     @commands.guild_only()

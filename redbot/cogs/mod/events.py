@@ -120,7 +120,7 @@ class Events(MixinMeta):
         
         guild = message.guild
         author = message.author
-        channel=message.channel
+        channel = message.channel
         guild_cache = self.cache.get(guild.id, None)
         if guild_cache is None:
             repeats = await self.config.guild(guild).delete_repeats()
@@ -128,14 +128,24 @@ class Events(MixinMeta):
                 return False
             guild_cache = self.cache[guild.id] = defaultdict(lambda: deque(maxlen=6))
         
-        if not message.content:
+        if message.flags.value == 16384: # 是否是转发消息
+            reference = message.reference
+            if reference is not None:
+                ref_channel = self.bot.get_channel(reference.channel_id)
+                ref_msg = await ref_channel.fetch_message(reference.message_id)
+                message_content = ref_msg.content
+        else:
+            message_content = message.content
+
+        if not message_content:
+            log.info(f"message_content is None\n{message}")
             return False
             # Off-topic # 频道公告 # mod-only # 规则
         if channel.id == 608168595314180106 or channel.id == 970972545564168232 or channel.id == 877000289146798151:
         
             return False
 
-        guild_cache[author].append(message.content)
+        guild_cache[author].append(message_content)
         msgs = guild_cache[author]
         # log.info(f"msgslen:{len(msgs)} setmsgslen:{len(set(msgs))}")
         if len(msgs) > 2 and len(msgs) < 6 and len(set(msgs)) == 1:
@@ -331,11 +341,20 @@ class Events(MixinMeta):
         if not isenabled:
             return False
 
+        if message.flags.value == 16384: # 是否是转发消息
+            reference = message.reference
+            if reference is not None:
+                ref_channel = self.bot.get_channel(reference.channel_id)
+                ref_msg = await ref_channel.fetch_message(reference.message_id)
+                message_content = ref_msg.content
+        else:
+            message_content = message.content
+
         guild, author = message.guild, message.author
         detect_list = ["affcode","register?code","guest/i","invite_code","?register=","?aff=","utm_content"]
 
         for aff in detect_list:
-            if aff in message.content:
+            if aff in message_content:
                 await message.reply("检测到包含邀请参数的链接.链接所有者可能会从中获得邀请报酬,包括但不限于充值分成.机场的分享者应在说明后发送带邀请参数的链接,其他人应享有知情权,自愿参与.机场或服务的任何问题(信息泄露、跑路)与本server无关,无人能够担保,请自行甄别.\n如果您频繁发送或者在无人询问的情况下主动推广机场等付费资源,您将被警告甚至禁言.")
 
     async def autorole(self, message):
@@ -423,7 +442,17 @@ class Events(MixinMeta):
             return
         if self.isonlycontainsemoji(message.content):
             return
-        if len(message.content.strip()) < 2:
+
+        if message.flags.value == 16384: # 是否是转发消息
+            reference = message.reference
+            if reference is not None:
+                ref_channel = self.bot.get_channel(reference.channel_id)
+                ref_msg = await ref_channel.fetch_message(reference.message_id)
+                message_content = ref_msg.content
+        else:
+            message_content = message.content
+        
+        if len(message_content.strip()) < 2:
             return
         channel = message.channel
         if channel.id == 703228036157538364:
@@ -445,7 +474,7 @@ class Events(MixinMeta):
 
         ad_keywords_string = ", ".join(ad_keywords)
         # prompt = f"你是一个语义分析助手,对输入的聊天消息进行分析,如果满足任意条件,返回yes,否则返回no.条件1:消息涉及对中国(包含港澳台)政治问题的讨论.条件2:包含对其他聊天者的严重的侮辱.条件3:涉及社工库(人肉搜索/开盒)等泄露个人敏感信息.条件4:加密货币宣传或诈骗.条件5:消息大意与给出的广告语义库(括号内的为注释)中的任一项相符.讨论或询问标注为P2C菜单名的软件都视为广告,注意区分stand/alpha等词作普通英文单词还是作软件名\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}"
-        prompt = f"我是语义分析助手\n我只做一件事\n对输入的聊天消息进行蛛丝马迹分析\n我总是只会输出yes or no 取决于文本是否符合以下任意条件\n我需要在语义中寻找(中国政治)(严重的侮辱)(社工库 个人信息泄露)(加密货币)(广告语义库中的任一项)(P2C菜单软件)\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}" # lqlinovo's version
+        prompt = f"我是语义分析助手\n我只做一件事\n对输入的聊天消息进行蛛丝马迹分析\n我总是只会输出yes or no 取决于文本是否符合以下任意条件\n我需要在语义中寻找(中国政治)(严重的侮辱)(社工库 个人信息泄露)(加密货币)(广告语义库中的任一项)(P2C菜单软件)\n广告语义库: {ad_keywords_string}\n聊天消息: {message_content}" # lqlinovo's version
 
         for attempt in range(3):
             response = await self.openai_request("gpt-4o-mini", prompt)
@@ -516,9 +545,9 @@ class Events(MixinMeta):
                     await message.author.edit(timed_out_until=until, reason="[自动]语义分析")
                     if guild.id == 388227343862464513:
                         ntfcn = message.guild.get_channel(1162401982649204777)
-                        # await ntfcn.send(f"[{message.author.mention} 的消息经语义分析识别为潜在的不适宜展示消息,已被禁言{mute_time}分钟.\n当前消息内容:```{messagecontent}```")
+                        # await ntfcn.send(f"[{message.author.mention} 的消息经语义分析识别为潜在的不适宜展示消息,已被禁言{mute_time}分钟.\n当前消息内容:```{message_content}```")
                     await message.delete()
-                    messagecontent = message.content
+                    messagecontent = message_content
                     if len(messagecontent) > 900:
                         messagecontent = messagecontent[:900]
                     await message.channel.send(f"[测试阶段|语义分析] {author.mention} 的消息被归类为广告/诈骗/政治敏感/冒犯/隐私泄露,已被禁言{mute_time}分钟.\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n原始消息已私发给您.管理员可使用&toggleaicheck关闭消息实时分析", delete_after=3600)
@@ -730,11 +759,20 @@ class Events(MixinMeta):
             return False
         guildid = message.guild.id
 
+        if message.flags.value == 16384: # 是否是转发消息
+            reference = message.reference
+            if reference is not None:
+                ref_channel = self.bot.get_channel(reference.channel_id)
+                ref_msg = await ref_channel.fetch_message(reference.message_id)
+                message_content = ref_msg.content
+        else:
+            message_content = message.content
+
         pattern_hidelink = re.compile(r'\[([^\]]+)\]\((https?:\/\/[^\s]+) ?\)')
-        match_hidelink = pattern_hidelink.search(message.content)
+        match_hidelink = pattern_hidelink.search(message_content)
         if match_hidelink:
             relurlpattern = r"(https?://\S+)"
-            scanedurls = re.findall(relurlpattern, message.content)
+            scanedurls = re.findall(relurlpattern, message_content)
 
             for surl in scanedurls:
                 domainpre = tldextract.extract(surl).domain
@@ -746,7 +784,7 @@ class Events(MixinMeta):
             detect_list = ["steamcommunity.com/gift","from steam","Gift 50$"]
 
             for suslink_p in detect_list:
-                if suslink_p in message.content:
+                if suslink_p in message_content:
                     log.info(f"关键词: {suslink_p}")
                     mod_cache = self.cache_mod.get(guildid, None)
                     if mod_cache is None:
@@ -766,7 +804,7 @@ class Events(MixinMeta):
                         await self.repeattosoftban(message.guild, ysch, message.channel, message.author, "[自动]发送盗号链接(steam礼品卡)")
                         if guildid == 388227343862464513:
                             ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
-                            await ntfcn.send(f"<@{message.author.id}>  ({message.author.name}) 被识别为广告机,已撤回近24h消息并踢出.\n判断原因:steam礼品卡诈骗链接 \n频道:{message.channel.mention}\n当前消息快照:```{message.content}```")
+                            await ntfcn.send(f"<@{message.author.id}>  ({message.author.name}) 被识别为广告机,已撤回近24h消息并踢出.\n判断原因:steam礼品卡诈骗链接 \n频道:{message.channel.mention}\n当前消息快照:```{message_content}```")
 
                     except discord.HTTPException:
                         pass
@@ -776,7 +814,7 @@ class Events(MixinMeta):
 
             try:
                 url_pattern = re.compile(r'\((http[s]?://[^)]*)')
-                urls = url_pattern.findall(message.content)
+                urls = url_pattern.findall(message_content)
                 if len(urls) > 1:
                     await message.delete()
                     await message.channel.send(f'{message.author.mention} 复合markdown', delete_after=180)
@@ -794,12 +832,12 @@ class Events(MixinMeta):
             await message.delete()
             await message.channel.send(f'{message.author.mention} 请勿使用markdown语法隐藏真实网址,原始消息已私发给您,请重新编辑', delete_after=60)
             try:
-                await message.author.send(f"请勿使用markdown语法隐藏真实网址,请重新编辑.您的原始消息内容: ```{message.content}```")
+                await message.author.send(f"请勿使用markdown语法隐藏真实网址,请重新编辑.您的原始消息内容: ```{message_content}```")
             except discord.HTTPException:
                 pass
             if guildid == 388227343862464513:
                 ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
-                await ntfcn.send(f"{message.author.mention} ({message.author.name}) 的消息中存在使用Markdown语法隐藏的网址. \n频道:{message.channel.mention}\n当前消息快照:```{message.content}```")
+                await ntfcn.send(f"{message.author.mention} ({message.author.name}) 的消息中存在使用Markdown语法隐藏的网址. \n频道:{message.channel.mention}\n当前消息快照:```{message_content}```")
             return True
         return False
 
@@ -812,10 +850,20 @@ class Events(MixinMeta):
         if guildid != 388227343862464513:
             return
 
-        if message.attachments:
+
+        if message.flags.value == 16384: # 是否是转发消息
+            reference = message.reference
+            if reference is not None:
+                ref_channel = self.bot.get_channel(reference.channel_id)
+                ref_msg = await ref_channel.fetch_message(reference.message_id)
+                s_message = ref_msg
+        else:
+            s_message = message
+            
+        if s_message.attachments:
             ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
             count_mk = 0
-            for attachment in message.attachments:
+            for attachment in s_message.attachments:
                 if attachment.filename.endswith('.png') or attachment.filename.endswith('.jpg') or attachment.filename.endswith('.jpeg'):
                     await attachment.save(f"/home/azureuser/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")
                     img = Image.open(f"/home/azureuser/bot_tmp/atc/temp_image{message.id}_{count_mk}.png")
@@ -862,14 +910,23 @@ class Events(MixinMeta):
             return False
         guildid = message.guild.id
 
-        if "weixin110.qq.com" in message.content or "weixin.qq.com/g" in message.content or "u.wechat.com" in message.content or "jq.qq.com" in message.content or "qm.qq.com" in message.content or "group_code" in message.content or "qr.alipay.com" in message.content or "wxp://" in message.content or "discord.com/ra/" in message.content or "gg.gg/" in message.content or "u.to/" in message.content or "t.ly/" in message.content:
+        if message.flags.value == 16384: # 是否是转发消息
+            reference = message.reference
+            if reference is not None:
+                ref_channel = self.bot.get_channel(reference.channel_id)
+                ref_msg = await ref_channel.fetch_message(reference.message_id)
+                message_content = ref_msg.content
+        else:
+            message_content = message.content
+
+        if "weixin110.qq.com" in message_content or "weixin.qq.com/g" in message_content or "u.wechat.com" in message_content or "jq.qq.com" in message_content or "qm.qq.com" in message_content or "group_code" in message_content or "qr.alipay.com" in message_content or "wxp://" in message_content or "discord.com/ra/" in message_content or "gg.gg/" in message_content or "u.to/" in message_content or "t.ly/" in message_content:
             await message.delete()
             await message.channel.send(f"{message.author.mention} 您的消息中存在可疑链接,已被撤回.")
             if guildid == 388227343862464513:
                 ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
                 await ntfcn.send(f"{message.author.mention}的消息中存在可疑链接(收付款/个人或群名片/微信辅助验证/discord登录). \n 当前消息快照:```{message.content}```")
             try:
-                await message.author.send(f"您发送的消息 `{message.content}` 被识别为包含可疑链接,已被撤回.")
+                await message.author.send(f"您发送的消息 `{message_content}` 被识别为包含可疑链接,已被撤回.")
             except discord.HTTPException:
                 log.info(f"无法私发消息给用户 {message.author.id}")
             return True
@@ -1012,8 +1069,17 @@ class Events(MixinMeta):
         if not isenabled:
             return False
 
-        if len(message.attachments) > 0:
-            for attachment in message.attachments:
+        if message.flags.value == 16384: # 是否是转发消息
+            reference = message.reference
+            if reference is not None:
+                ref_channel = self.bot.get_channel(reference.channel_id)
+                ref_msg = await ref_channel.fetch_message(reference.message_id)
+                message_final = ref_msg
+        else:
+            message_final = message
+
+        if len(message_final.attachments) > 0:
+            for attachment in message_final.attachments:
                 file_path = f'/home/azureuser/bot_tmp/atc/{attachment.filename}'
                 if attachment.content_type == None:
                     return
@@ -1031,7 +1097,16 @@ class Events(MixinMeta):
         if not isenabled:
             return False
 
-        content = message.content
+        if message.flags.value == 16384: # 是否是转发消息
+            reference = message.reference
+            if reference is not None:
+                ref_channel = self.bot.get_channel(reference.channel_id)
+                ref_msg = await ref_channel.fetch_message(reference.message_id)
+                message_content = ref_msg.content
+        else:
+            message_content = message.content
+
+        content = message_content
         urlpattern = r"(https?://\S+)"
         urls = re.findall(urlpattern, content)
         for url in urls:

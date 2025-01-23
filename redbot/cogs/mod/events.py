@@ -149,7 +149,7 @@ class Events(MixinMeta):
         if guild_cache is None:
             repeats = await self.config.guild(guild).delete_repeats()
             if repeats == -1:
-                return False
+                return True
             guild_cache = self.cache[guild.id] = defaultdict(lambda: deque(maxlen=6))
         
         if message.flags.value == 16384: # 是否是转发消息
@@ -161,7 +161,6 @@ class Events(MixinMeta):
             message_content = message.content
 
         if not message_content:
-            log.info(f"message_content is None\n{message}")
             return False
             # Off-topic # 频道公告 # mod-only # 规则
         if channel.id == 608168595314180106 or channel.id == 970972545564168232 or channel.id == 877000289146798151:
@@ -1205,6 +1204,9 @@ class Events(MixinMeta):
         if await self.bot.cog_disabled_in_guild(self, message.guild):
             return
         
+        if message.flags.value == 16384: # 是否是转发消息
+            return
+            
         if message.channel.id == 970972545564168232: #绕过mod-only
             return
 

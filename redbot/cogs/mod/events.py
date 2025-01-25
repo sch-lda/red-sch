@@ -19,7 +19,6 @@ import tldextract
 import multiprocessing
 import time
 import threading
-from openai import OpenAI
 import aiohttp
 
 _ = i18n.Translator("Mod", __file__)

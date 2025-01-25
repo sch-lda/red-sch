@@ -544,9 +544,7 @@ class Downloader(commands.Cog):
         - `<repo_url>` URL to the cog branch. Usually GitHub or GitLab.
         - `[branch]` Optional branch to install cogs from.
         """
-        agreed = await do_install_agreement(ctx)
-        if not agreed:
-            return
+        
         if name.startswith(".") or name.endswith("."):
             await ctx.send(_("Repo names cannot start or end with a dot."))
             return

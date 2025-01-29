@@ -97,6 +97,7 @@ class Mod(
         self.config.register_user(**self.default_user_settings)
         self.cache: dict = {}
         self.cache_mod: dict = {}
+        self.cache_aicheck: dict = {}
         self.tban_expiry_task = asyncio.create_task(self.tempban_expirations_task())
         self.last_case: dict = defaultdict(dict)
         self.mthread1 = None

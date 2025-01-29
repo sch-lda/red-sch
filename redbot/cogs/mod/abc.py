@@ -18,6 +18,7 @@ class MixinMeta(ABC):
         self.bot: Red
         self.cache: dict
         self.cache_mod: dict
+        self.cache_aicheck: dict
 
     @staticmethod
     @abstractmethod

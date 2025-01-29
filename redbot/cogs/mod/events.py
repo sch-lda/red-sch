@@ -471,8 +471,6 @@ class Events(MixinMeta):
         else:
             message_content = message.content
         
-        if len(message_content.strip()) < 2:
-            return
         channel = message.channel
         if channel.id == 703228036157538364:
             return
@@ -491,10 +489,24 @@ class Events(MixinMeta):
         with open('/home/azureuser/.local/share/Red-DiscordBot/data/sch/cogs/Mod/ad_keywords.txt', 'r', encoding='utf-8') as file:
             ad_keywords = [line.strip() for line in file.readlines()]
 
+        guild_cache = self.cache_aicheck.get(guild.id, None)
+        if guild_cache is None:
+            repeats = await self.config.guild(guild).delete_repeats()
+            if repeats == -1:
+                return True
+            guild_cache = self.cache_aicheck[guild.id] = defaultdict(lambda: deque(maxlen=10))
+        
+        guild_cache[author].append(message_content)
+
+        last_ten_msgs = list(guild_cache[author])
+        
         ad_keywords_string = ", ".join(ad_keywords)
         # prompt = f"你是一个语义分析助手,对输入的聊天消息进行分析,如果满足任意条件,返回yes,否则返回no.条件1:消息涉及对中国(包含港澳台)政治问题的讨论.条件2:包含对其他聊天者的严重的侮辱.条件3:涉及社工库(人肉搜索/开盒)等泄露个人敏感信息.条件4:加密货币宣传或诈骗.条件5:消息大意与给出的广告语义库(括号内的为注释)中的任一项相符.讨论或询问标注为P2C菜单名的软件都视为广告,注意区分stand/alpha等词作普通英文单词还是作软件名\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}"
-        prompt = f"我是语义分析助手\n我只做一件事\n对输入的聊天消息进行蛛丝马迹分析\n我总是只会输出yes or no 取决于文本是否符合以下任意条件\n我需要在语义中寻找(中国政治)(严重的侮辱)(社工库 个人信息泄露)(加密货币)(广告语义库中的任一项)(P2C菜单软件)\n广告语义库: {ad_keywords_string}\n聊天消息: {message_content}" # lqlinovo's version
+        prompt = f"我是语义分析助手\n我只做一件事\n对输入的聊天消息进行蛛丝马迹分析,根据上下文综合分析语义\n我总是只会输出yes or no 取决于文本是否符合以下任意条件\n我需要在语义中寻找(中国包括港澳台政治问题的讨论)(严重的侮辱)(社工库 个人信息泄露 开盒)(加密货币)(广告语义库中的任一项)\n广告语义库: {ad_keywords_string}\n以下是用户的最新消息:\n{message_content}\n以下是用户的最近几条消息(以数组的方式呈现)，请仔细检查用户是否故意通过拆分消息反审查:\n{last_ten_msgs}"
 
+        if len(prompt) > 128000:
+            prompt = prompt[:128000]
+        
         for attempt in range(3):
             response = await self.openai_request("gpt-4o-mini", prompt)
             if response is None:

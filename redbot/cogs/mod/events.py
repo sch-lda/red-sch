@@ -413,7 +413,7 @@ class Events(MixinMeta):
         await author.add_roles(rolebasic)
         await message.channel.send(f"{author.mention} 您没有任何身份组,已为您分配小航海组.")
 
-    async def openai_request(self, modelstr, prompt) -> Optional[str]:
+    async def openai_request(self, modelstr, userprompt, sysprompt) -> Optional[str]:
 
         try:
             openai_api_key = await self.bot.get_shared_api_tokens("openai")
@@ -430,8 +430,12 @@ class Events(MixinMeta):
                 "model": modelstr,
                 "messages": [
                     {
+                        "role": "system",
+                        "content": sysprompt
+                    },
+                    {
                         "role": "user",
-                        "content": prompt
+                        "content": userprompt
                     }
                 ]
             }
@@ -502,13 +506,41 @@ class Events(MixinMeta):
         
         ad_keywords_string = ", ".join(ad_keywords)
         # prompt = f"你是一个语义分析助手,对输入的聊天消息进行分析,如果满足任意条件,返回yes,否则返回no.条件1:消息涉及对中国(包含港澳台)政治问题的讨论.条件2:包含对其他聊天者的严重的侮辱.条件3:涉及社工库(人肉搜索/开盒)等泄露个人敏感信息.条件4:加密货币宣传或诈骗.条件5:消息大意与给出的广告语义库(括号内的为注释)中的任一项相符.讨论或询问标注为P2C菜单名的软件都视为广告,注意区分stand/alpha等词作普通英文单词还是作软件名\n广告语义库: {ad_keywords_string}\n聊天消息: {message.content}"
-        prompt = f"我是语义分析助手\n我只做一件事\n对输入的聊天消息进行蛛丝马迹分析,根据上下文综合分析语义\n我总是只会输出yes or no 取决于文本是否符合以下任意条件\n我需要在语义中寻找(中国包括港澳台政治问题的讨论)(严重的侮辱)(社工库 个人信息泄露 开盒)(加密货币)(广告语义库中的任一项)\n广告语义库: {ad_keywords_string}\n以下是用户的最新消息:\n{message_content}\n以下是用户的最近几条消息(以数组的方式呈现)，请仔细检查用户是否故意通过拆分消息反审查:\n{last_ten_msgs}"
+        system_prompt = """Role: 敏感内容分析专家
+            Objective: 基于语义检测消息是否符合预设风险条件
+            Capability: 
+            - 上下文综合分析能力
+            - 消息拆分反审查识别能力
+            Output:
+            - 严格仅输出小写英文 yes/no
+            - yes触发条件: 
+            1. 政治敏感话题：包含中国及港澳台政治讨论/负面内容
+            2. 危险行为：涉及侮辱、社工信息、加密货币
+            3. 广告关联：匹配广告语义库关键词
+            4. 拆分规避检测行为
+            - no触发条件: 
+            所有中性/安全内容"""
 
-        if len(prompt) > 128000:
-            prompt = prompt[:128000]
+        user_prompt = f"""待分析消息：
+            {message_content}
+
+            上下文支持材料：
+            1. 历史消息数组(分析拆分规避行为)：
+            {last_ten_msgs}
+            2. 当前广告关键词库：
+            {ad_keywords_string}
+
+            请严格按以下流程执行：
+            1. 提取消息核心语义要素
+            2. 交叉验证上下文关联性
+            3. 比对所有风险维度
+            4. 最终判定：<answer>"""
+
+        if len(user_prompt) > 128000:
+            user_prompt = user_prompt[:128000]
         
         for attempt in range(3):
-            response = await self.openai_request("gpt-4o-mini", prompt)
+            response = await self.openai_request("deepseek-v3", user_prompt, system_prompt)
             if response is None:
                 log.info(f"gpt请求失败-失败次数{attempt + 1}")
                 continue
@@ -534,7 +566,7 @@ class Events(MixinMeta):
             recheck = "no"
 
             for attempt2 in range(3):
-                response2 = await self.openai_request("mistral-large-latest", prompt)
+                response2 = await self.openai_request("mistral-large-latest", user_prompt, system_prompt)
                 if response2 is None:
                     log.info(f"mistral请求失败-失败次数{attempt2 + 1}")
                     continue

@@ -532,7 +532,8 @@ class Events(MixinMeta):
             1. 提取消息核心语义要素
             2. 交叉验证上下文关联性
             3. 比对所有风险维度
-            4. 最终判定：<answer>"""
+            4. 最终判定：<answer>
+            注意，聊天消息来自侠盗猎车手游戏交流群，可能包含“抢劫”等游戏内暴力内容，不应触发风险判定。"""
 
         if len(user_prompt) > 128000:
             user_prompt = user_prompt[:128000]

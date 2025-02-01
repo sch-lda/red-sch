@@ -257,8 +257,6 @@ class Events(MixinMeta):
             return False
         
         for keyword in automod_keywords:
-            log.info(f"检测关键词: {keyword.lower()}")
-            log.info(f"检测内容: {execution.content.lower()}")
             
             if keyword.lower() in execution.content.lower():
 

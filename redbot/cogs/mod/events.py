@@ -516,6 +516,7 @@ class Events(MixinMeta):
             2. 危险行为：社工信息(telegram社工机器人、开盒)、加密货币推广
             3. 广告关联：匹配广告语义库关键词
             4. 拆分规避检测行为
+            5. 钓鱼网站(例如把steamcommunity.com写成steamcomuunity.com的地址)
             - no触发条件: 
             所有中性/安全内容"""
 

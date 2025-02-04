@@ -364,31 +364,31 @@ class ModInfo(MixinMeta):
 
     @commands.command()
     @commands.is_owner()
-    async def shadowban(self, ctx: commands.Context, *, member: discord.Member):
-        """Shadow ban a member."""
-        await self.config.user(member).shadow_ban.set(True)
-        await ctx.send(f"{member.mention} has been shadow banned.", delete_after=5)
+    async def shadowban(self, ctx: commands.Context, *, user: discord.User):
+        """Shadow ban a user."""
+        await self.config.user(user).shadow_ban.set(True)
+        await ctx.send(f"{user.mention} has been shadow banned.", delete_after=50)
     
     @commands.command()
     @commands.is_owner()
-    async def shadowmute(self, ctx: commands.Context, *, member: discord.Member):
-        """Shadow mute a member."""
-        await self.config.user(member).shadow_mute.set(True)
-        await ctx.send(f"{member.mention} has been shadow muted.", delete_after=5)
+    async def shadowmute(self, ctx: commands.Context, *, user: discord.User):
+        """Shadow mute a user."""
+        await self.config.user(user).shadow_mute.set(True)
+        await ctx.send(f"{user.mention} has been shadow muted.", delete_after=50)
     
     @commands.command()
     @commands.is_owner()
-    async def unshadowban(self, ctx: commands.Context, *, member: discord.Member):
-        """Unshadow ban a member."""
-        await self.config.user(member).shadow_ban.set(False)
-        await ctx.send(f"{member.mention} has been unshadow banned.", delete_after=5)
+    async def unshadowban(self, ctx: commands.Context, *, user: discord.User):
+        """Unshadow ban a user."""
+        await self.config.user(user).shadow_ban.set(False)
+        await ctx.send(f"{user.mention} has been unshadow banned.", delete_after=0)
     
     @commands.command()
     @commands.is_owner()
-    async def unshadowmute(self, ctx: commands.Context, *, member: discord.Member):
-        """Unshadow mute a member."""
-        await self.config.user(member).shadow_mute.set(False)
-        await ctx.send(f"{member.mention} has been unshadow muted.", delete_after=5)
+    async def unshadowmute(self, ctx: commands.Context, *, user: discord.User):
+        """Unshadow mute a user."""
+        await self.config.user(user).shadow_mute.set(False)
+        await ctx.send(f"{user.mention} has been unshadow muted.", delete_after=50)
 
     @commands.command()
     @commands.guild_only()

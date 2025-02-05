@@ -609,7 +609,10 @@ class Events(MixinMeta):
                     if guild.id == 388227343862464513:
                         ntfcn = message.guild.get_channel(1162401982649204777)
                         # await ntfcn.send(f"[{message.author.mention} 的消息经语义分析识别为潜在的不适宜展示消息,已被禁言{mute_time}分钟.\n当前消息内容:```{message_content}```")
-                    await message.delete()
+                    try:
+                        await message.delete()
+                    except discord.HTTPException:
+                        pass    
                     messagecontent = message_content
                     if len(messagecontent) > 900:
                         messagecontent = messagecontent[:900]

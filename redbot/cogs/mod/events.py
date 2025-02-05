@@ -619,7 +619,7 @@ class Events(MixinMeta):
                     await message.channel.send(f"[测试阶段|语义分析] {author.mention} 的消息被归类为广告/诈骗/政治敏感/冒犯/隐私泄露,已被禁言{mute_time}分钟.\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n原始消息已私发给您.管理员可使用&toggleaicheck关闭消息实时分析", delete_after=3600)
                     log.info(f" {author} 的消息被识别为潜在的广告或诈骗消息\n本次禁言时间:{mute_time}分\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n原始消息内容:{messagecontent}")
                     try:
-                        await author.send(f"您的消息被识别为潜在的广告或诈骗消息\n本次禁言时间:{mute_time}分\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n您的原始消息内容:```{messagecontent}```")
+                        await author.send(f"您的消息被识别为潜在的广告或诈骗消息\n本次禁言时间:{mute_time}分\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n您的原始消息内容:```{messagecontent}```\n服务器:{guild.name}\n频道:{channel.name}")
                     except discord.HTTPException:
                         pass
             return True
@@ -1167,6 +1167,9 @@ class Events(MixinMeta):
         else:
             message_content = message.content
 
+        if message.channel.id == 1254956902308122664: #bypass 进群验证
+            return
+        
         content = message_content
         urlpattern = r"(https?://\S+)"
         urls = re.findall(urlpattern, content)

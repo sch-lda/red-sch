@@ -540,7 +540,10 @@ class Events(MixinMeta):
             user_prompt = user_prompt[:128000]
         
         for attempt in range(3):
-            response = await self.openai_request("deepseek-v3", user_prompt, system_prompt)
+            modelstr = "deepseek-v3"
+            if attempt == 3:
+                modelstr = "gpt-4o-mini"
+            response = await self.openai_request(modelstr, user_prompt, system_prompt)
             if response is None:
                 log.info(f"gpt请求失败-失败次数{attempt + 1}")
                 continue

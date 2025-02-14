@@ -515,18 +515,14 @@ class Events(MixinMeta):
             1. 政治敏感话题：包含中国及港澳台政治讨论/负面内容
             2. 危险行为：社工信息(telegram社工机器人、开盒)、加密货币推广
             3. 广告关联：匹配广告语义库关键词
+                只要讨论或询问标注为P2C菜单名的软件都视为广告
             4. 拆分规避检测行为
             5. 钓鱼网站(例如把steamcommunity.com写成steamcomuunity.com的地址)
             - no触发条件: 
             所有中性/安全内容"""
 
-        user_prompt = f"""待分析消息：
-            {message_content}
-
-            上下文支持材料：
-            1. 历史消息数组(分析拆分规避行为)：
-            {last_ten_msgs}
-            2. 当前广告关键词库：
+        user_prompt = f"""
+            当前广告关键词库：
             {ad_keywords_string}
 
             请严格按以下流程执行：
@@ -534,10 +530,28 @@ class Events(MixinMeta):
             2. 交叉验证上下文关联性
             3. 比对所有风险维度
             4. 最终判定：<answer>
-            注意，聊天消息来自侠盗猎车手游戏交流群，可能包含“抢劫”等游戏内暴力内容，不应触发风险判定。"""
+            注意，聊天消息来自侠盗猎车手游戏交流群，可能包含“抢劫”等游戏内暴力内容，不应触发风险判定。
+            
+            待分析消息：
+            {message_content}
 
-        if len(user_prompt) > 128000:
-            user_prompt = user_prompt[:128000]
+            上下文支持材料：
+             历史消息数组(分析拆分规避行为)：
+            {last_ten_msgs}
+
+            参考示例：
+            1. 厄里斯给词汇崩掉了 yes
+            2. 香港有什么知名旅游景点 no
+            3. GTA赌场豪劫怎么打 no
+            4. 请问哪个付费菜单好用 yes
+            5. erebus怎么用 yes
+
+            """
+
+        if len(user_prompt) > 64000:
+            user_prompt = user_prompt[:64000]
+
+        # log.info(f"user_prompt: {user_prompt}")
         
         for attempt in range(3):
             modelstr = "deepseek-v3"

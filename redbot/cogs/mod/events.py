@@ -555,7 +555,7 @@ class Events(MixinMeta):
         
         for attempt in range(3):
             modelstr = "deepseek-v3"
-            if attempt == 3:
+            if attempt == 2:
                 modelstr = "gpt-4o-mini"
             response = await self.openai_request(modelstr, user_prompt, system_prompt)
             if response is None:

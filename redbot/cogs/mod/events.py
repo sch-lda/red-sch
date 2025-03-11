@@ -559,6 +559,7 @@ class Events(MixinMeta):
             17. 议员，给我一分钟。我要说的是，关于荔枝角收押所重建，55亿的预算加上410个床位，每个床位花费50万，这是否合理？ no
             18. https://github.com/Deadlineem/Chronix 有新菜单？ no
             19. 没同步吧，内地版的好像被阉割了很多功能 no
+            20. 在玩到Alice Menu前我还不想死号 no
 
 
             """

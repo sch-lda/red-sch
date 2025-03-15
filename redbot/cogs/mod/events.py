@@ -560,6 +560,10 @@ class Events(MixinMeta):
             18. https://github.com/Deadlineem/Chronix 有新菜单？ no
             19. 没同步吧，内地版的好像被阉割了很多功能 no
             20. 在玩到Alice Menu前我还不想死号 no
+            21. 香港不能说吗 no
+            22. 香港的不行吧 no
+            23. 差點以為被開盒了 no
+            
 
 
             """

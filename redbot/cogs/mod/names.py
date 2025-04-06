@@ -410,6 +410,6 @@ class ModInfo(MixinMeta):
         new_mute_time = 2 ** (new_bad_records - 1)
         await ctx.send(f"已将{member.mention}的触发NLP过滤的次数增加{increase}.\n下次触发过滤禁言时间设置为{new_mute_time}分钟.")
         try:
-            await member.send(f"您的恶意指数被管理员增加{increase}.\n下次触发过滤禁言时间设置为{new_mute_time}分钟.\n前往Dashboard查看详情并通过完成挑战自助降低恶意指数(仅对符合条件的账户开放).\nhttps://redrpcapi.cc2077.site/")
+            await member.send(f"您的恶意指数被管理员增加{increase}.\n下次触发过滤禁言时间设置为{new_mute_time}分钟.\n前往Dashboard查看详情并通过完成挑战自助降低恶意指数(仅对符合条件的账户开放).\nhttps://redrpcapi.1007890.xyz/")
         except:
             pass

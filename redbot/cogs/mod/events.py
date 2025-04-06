@@ -440,7 +440,7 @@ class Events(MixinMeta):
 
             # 发送请求到 OpenAI API
             async with aiohttp.ClientSession() as session:
-                async with session.post('https://gptoneapi.cc2077.site/v1/chat/completions', headers=headers, json=data) as response:
+                async with session.post('https://gptoneapi.1007890.xyz/v1/chat/completions', headers=headers, json=data) as response:
                     if response.status == 200:
                         result = await response.json()
                         response_text = result['choices'][0]['message']['content'].strip()

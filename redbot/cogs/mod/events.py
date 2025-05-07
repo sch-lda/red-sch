@@ -6,6 +6,7 @@ from typing import List, Optional
 from redbot.core.utils.mod import get_audit_reason
 import requests
 import discord
+from discord.utils import maybe_coroutine
 from redbot.core import i18n, modlog, commands
 from redbot.core.utils.mod import is_mod_or_superior
 from .abc import MixinMeta
@@ -786,7 +787,7 @@ class Events(MixinMeta):
             "Authorization": Authorization.get("auth")
                 }
         try:
-            response = requests.get(url, headers=headers, timeout=6)
+            response = requests.get(url, headers=headers, timeout=5)
         except requests.exceptions.RequestException as e:
             log.info(f"Bio解析-HTTP请求失败: {e}")
             ntfcnsec = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
@@ -846,7 +847,7 @@ class Events(MixinMeta):
                 await self.config.member_from_ids(guildid, userid).pf_last_check_time.set(current_time.isoformat())
                         
             except:
-                log.info("BIO-无法解析JSON结果。")
+                log.info(f"BIO-无法解析JSON结果: {response.text}")
                 ntfcnsec = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
                 await ntfcnsec.send("Bio解析模块疑似故障-json解析失败")
 
@@ -1038,11 +1039,22 @@ class Events(MixinMeta):
             return
         url = 'https://www.virustotal.com/api/v3/files'
         headers = {'x-apikey': VT_key.get("apikey")}
-        with open(file_path, 'rb') as file_f:
-            response = requests.post(url, files={'file': file_f}, headers=headers, timeout=6)
-        os.remove(file_path)
-        if response.status_code == 200:
-            json_response = response.json()
+        try:
+            async with aiohttp.ClientSession() as session:
+                with open(file_path, 'rb') as file_f:
+                    form_data = aiohttp.FormData()
+                    form_data.add_field('file', file_f)
+                    
+                    async with session.post(url, headers=headers, data=form_data, timeout=10) as response:
+                        # 你可以在这里处理响应
+                        json_response = await response.json()
+                        # 处理响应数据的逻辑...
+                        
+        except Exception as e:
+            log.info(f"Error during VirusTotal scan: {e}")
+        finally:
+            if os.path.exists(file_path):
+                os.remove(file_path)
 
             data = json_response['data']
             aid = data['id']
@@ -1074,7 +1086,7 @@ class Events(MixinMeta):
             i = 30
             while i > 0:
                 i = i - 1
-                response2 = requests.get(url, headers=headers, timeout=6)
+                response2 = requests.get(url, headers=headers, timeout=4)
                 
                 if response2.status_code == 200:
                     json_response2 = response2.json()
@@ -1096,14 +1108,14 @@ class Events(MixinMeta):
                 restapi_sendmsg = f'https://discord.com/api/v9/channels/{message.channel.id}/messages'
 
                 data = {
-                    'content': str(f'{message.author.mention}的消息中存在可疑文件,经VirusTotal在线查毒, {harmc} 个引擎标记为病毒, {susc} 个引擎标记为可疑, {noharmc} 个引擎未检出异常. 结果仅供参考.'),
+                    'content': str(f'{message.author.mention} 的消息 {message.jump_url} 中存在可疑文件,经VirusTotal在线查毒, {harmc} 个引擎标记为病毒, {susc} 个引擎标记为可疑, {noharmc} 个引擎未检出异常. 结果仅供参考.'),
                 }
 
                 headers = {
                     'Authorization': f'Bot {bot_key.get("api_key")}',
                     'Content-Type': 'application/json',
                 }        
-                httprlt = requests.post(restapi_sendmsg, json=data, headers=headers, timeout=6)
+                httprlt = requests.post(restapi_sendmsg, json=data, headers=headers, timeout=4)
             return
             
 
@@ -1116,7 +1128,7 @@ class Events(MixinMeta):
         query_params = {'url': susurl}
         headers = {'x-apikey': VT_key.get("apikey")}
 
-        response = requests.post(url, params=query_params, headers=headers, timeout=6)
+        response = requests.post(url, params=query_params, headers=headers, timeout=4)
         if response.status_code == 200:
             json_response = response.json()
 
@@ -1129,7 +1141,7 @@ class Events(MixinMeta):
             while i > 0:
 
                 i = i - 1
-                response2 = requests.get(url, headers=headers, timeout=6)
+                response2 = requests.get(url, headers=headers, timeout=4)
 
                 if response2.status_code == 200:
                     json_response2 = response2.json()
@@ -1153,14 +1165,14 @@ class Events(MixinMeta):
                 restapi_sendmsg = f'https://discord.com/api/v9/channels/{message.channel.id}/messages'
 
                 data = {
-                    'content': str(f'{message.author.mention}的消息中存在可疑链接,经VirusTotal在线查毒, {harmc} 个引擎标记为病毒, {susc} 个引擎标记为可疑, {noharmc} 个引擎未检出异常. 结果仅供参考.'),
+                    'content': str(f'{message.author.mention}的消息 {message.jump_url} 中存在可疑链接,经VirusTotal在线查毒, {harmc} 个引擎标记为病毒, {susc} 个引擎标记为可疑, {noharmc} 个引擎未检出异常. 结果仅供参考.'),
                 }
 
                 headers = {
                     'Authorization': f'Bot {bot_key.get("api_key")}',
                     'Content-Type': 'application/json',
                 }        
-                requests.post(restapi_sendmsg, json=data, headers=headers, timeout=6)
+                requests.post(restapi_sendmsg, json=data, headers=headers, timeout=4)
         return
 
 
@@ -1184,7 +1196,13 @@ class Events(MixinMeta):
                     return
                 if attachment.content_type.startswith("image") or attachment.content_type.startswith("text") or attachment.content_type.startswith("audio") or attachment.content_type.startswith("video"):
                     return
-                await attachment.save(file_path)
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(attachment.url) as resp:
+                        if resp.status == 200:
+                            data = await resp.read()
+                            with open(file_path, 'wb') as f:
+                                f.write(data)
+                                log.info(f"附件下载成功: {file_path}")
                 if os.path.getsize(file_path) > 30 * 1024 * 1024:
                     os.remove(file_path)
                     return

@@ -32,7 +32,7 @@ from rich.theme import Theme
 from rich.traceback import PathHighlighter, Traceback  # DEP-WARN
 
 
-MAX_OLD_LOGS = 8
+MAX_OLD_LOGS = 50
 
 
 class RotatingFileHandler(logging.handlers.RotatingFileHandler):

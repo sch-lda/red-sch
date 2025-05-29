@@ -797,6 +797,11 @@ class Events(MixinMeta):
         if response.status_code == 200:
             try:
                 json_result = response.json()
+                user_profile = json_result.get("user_profile")
+                if user_profile is None:
+                    log.info(f"Bio解析-无法获取 {userid} 的个人资料, user_profile 为 None")
+                    return
+                    
                 userbio = json_result["user_profile"]["bio"]
                 guildbio = json_result["guild_member"]["bio"]
                 userpronouns = json_result["user_profile"]["pronouns"]

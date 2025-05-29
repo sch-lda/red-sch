@@ -123,20 +123,21 @@ class Events(MixinMeta):
             if ref_channel is None:
                 await message.delete()
                 await message.channel.send(f"<@{message.author.id}>.Discord ID:({message.author.id}),检测到bot无权限读取的内容，可能是来自私聊或其他服务器的消息，已删除.")
-                log.info(f"转发消息获取失败: {message}")
+                log.info(f"转发消息获取失败(ref_channel is None): {message}")
                 return None
             if ref_channel.guild.id != message.guild.id:
                 await message.delete()
                 await message.channel.send(f"<@{message.author.id}>.Discord ID:({message.author.id}),检测到bot无权限读取的内容，可能是来自私聊或其他服务器的消息，已删除.")
+                log.info(f"已删除guild_id不一致的转发消息: {message}\n转发消息所在频道guild_id: {ref_channel.guild.id}, 原消息所在频道guild_id: {message.guild.id}")
                 return None
             ref_msg = await ref_channel.fetch_message(reference.message_id)
             if ref_msg is not None:
                 return ref_msg
             else:
-                log.info(f"转发消息获取失败: {message}")
+                log.info(f"转发消息获取失败(ref_msg is None): {message}")
                 return None
         else:
-            log.info(f"转发消息获取失败: {message}")
+            log.info(f"转发消息获取失败(reference is None): {message}")
             return None
         return None
         

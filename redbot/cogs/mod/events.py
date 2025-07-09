@@ -1208,9 +1208,10 @@ class Events(MixinMeta):
                 async with aiohttp.ClientSession() as session:
                     async with session.get(attachment.url) as resp:
                         if resp.status == 200:
-                            data = await resp.read()
                             with open(file_path, 'wb') as f:
-                                f.write(data)
+                                # 分块下载（每次只加载一小部分到内存）
+                                async for chunk in resp.content.iter_chunked(1024 * 1024):  # 1MB per chunk
+                                    f.write(chunk)
                                 log.info(f"附件下载成功: {file_path}")
         
                 await self.VT_file_scan(file_path, message)

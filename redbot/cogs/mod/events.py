@@ -1200,6 +1200,9 @@ class Events(MixinMeta):
                 file_path = f'/home/azureuser/bot_tmp/atc/{attachment.filename}'
                 if attachment.content_type == None:
                     return
+                if attachment.size > 30 * 1024 * 1024: # 30MB
+                    log.info(f"附件大小超过限制: {attachment.filename}, 大小: {attachment.size} bytes")
+                    return
                 if attachment.content_type.startswith("image") or attachment.content_type.startswith("text") or attachment.content_type.startswith("audio") or attachment.content_type.startswith("video"):
                     return
                 async with aiohttp.ClientSession() as session:
@@ -1209,9 +1212,6 @@ class Events(MixinMeta):
                             with open(file_path, 'wb') as f:
                                 f.write(data)
                                 log.info(f"附件下载成功: {file_path}")
-                if os.path.getsize(file_path) > 30 * 1024 * 1024:
-                    os.remove(file_path)
-                    return
         
                 await self.VT_file_scan(file_path, message)
     

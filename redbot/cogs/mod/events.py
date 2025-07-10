@@ -1302,9 +1302,14 @@ class Events(MixinMeta):
  
     @commands.Cog.listener()
     async def on_message_edit(self, _prior, message):
-        isenabled = await self.config.guild(message.guild).editcheck()
-        if not isenabled:
-            return False
+        guildid = message.guild.id
+        if guildid == None:
+            log.info(f"编辑消息时无法获取guildid,可能是私信或DM\n编辑消息内容: {_prior.content} -> {message.content}")
+            return
+        else:
+            isenabled = await self.config.guild(message.guild).editcheck()
+            if not isenabled:
+                return False
 
         if _prior.content == message.content:
             return

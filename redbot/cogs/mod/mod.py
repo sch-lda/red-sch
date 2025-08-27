@@ -77,6 +77,9 @@ class Mod(
         "autobaserole":True,
         "editcheck":True,
         "automodcheck":True,
+        "ban_show_extra": False,
+        "ban_extra_embed_title": "Message from staff",
+        "ban_extra_embed_contents": "Please set me",
     }
 
     default_channel_settings = {"ignored": False}

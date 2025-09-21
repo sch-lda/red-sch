@@ -1371,16 +1371,22 @@ class Events(MixinMeta):
         if message.channel.id == 970972545564168232: #绕过mod-only
             return
 
+        deleted = await self.shadowfunc(message)
+        if deleted:
+            log.info(f"删除了shadowban的用户的消息 {message.author} : {message.content}")
+            return
+
         valid_user = isinstance(author, discord.Member) and not author.bot
         if not valid_user:
-            log.info(f"无法获取消息的author,可能是webhook或未知类型\n消息来自: {message.author.mention}\n消息内容: {message.content}")
+            log.info(f"消息所有者不是member,可能是webhook或外部app\n消息来自: {message.author.mention}\n消息内容: {message.content}")
             if message.reference is not None:
                 try:
                     ref_msg = await message.channel.fetch_message(message.reference.message_id)
-                    log.info(f"引用消息内容: {ref_msg.content}")
+                    log.info(f"引用消息内容: {ref_msg.content}\nauthor: {ref_msg.author.mention}")
                 except:
                     log.info("无法获取引用消息，删除消息")
                     await message.delete()
+                    return
             return
 
         #  Bots and mods or superior are ignored from the filter
@@ -1403,8 +1409,6 @@ class Events(MixinMeta):
                     await self.decodeqr(message)
                     deleted = await self.checkurl(message)
                     if not deleted:
-                        deleted = await self.shadowfunc(message)
-                        if not deleted:
                             await self.affcodecheck(message)
                             await self.urlsafecheck(message)
                             await self.filesafecheck(message)

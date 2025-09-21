@@ -1328,6 +1328,14 @@ class Events(MixinMeta):
 
         valid_user = isinstance(author, discord.Member) and not author.bot
         if not valid_user:
+            log.info(f"无法获取编辑消息的author,可能是webhook或未知类型\n消息来自: {message.author.mention}\n编辑消息内容: {_prior.content} -> {message.content}")
+            if message.reference is not None:
+                try:
+                    ref_msg = await message.channel.fetch_message(message.reference.message_id)
+                    log.info(f"引用消息内容: {ref_msg.content}")
+                except:
+                    log.info("无法获取引用消息，删除消息")
+                    await message.delete()
             return
 
         #  Bots and mods or superior are ignored from the filter
@@ -1365,6 +1373,14 @@ class Events(MixinMeta):
 
         valid_user = isinstance(author, discord.Member) and not author.bot
         if not valid_user:
+            log.info(f"无法获取消息的author,可能是webhook或未知类型\n消息来自: {message.author.mention}\n消息内容: {message.content}")
+            if message.reference is not None:
+                try:
+                    ref_msg = await message.channel.fetch_message(message.reference.message_id)
+                    log.info(f"引用消息内容: {ref_msg.content}")
+                except:
+                    log.info("无法获取引用消息，删除消息")
+                    await message.delete()
             return
 
         #  Bots and mods or superior are ignored from the filter

@@ -1384,7 +1384,7 @@ class Events(MixinMeta):
                     ref_msg = await message.channel.fetch_message(message.reference.message_id)
                     log.info(f"引用消息内容: {ref_msg.content}\nauthor: {ref_msg.author.mention}")
                 except:
-                    log.info("无法获取引用消息，删除消息")
+                    log.info(f"无法获取引用消息，删除消息\nreference raw: {message.reference}")
                     await message.delete()
                     return
             return

@@ -1037,6 +1037,19 @@ class Events(MixinMeta):
             except discord.HTTPException:
                 log.info(f"无法私发消息给用户 {message.author.id}")
             return True
+        if "1.jpg" in message_content and "2.jpg" in message_content and  "3.jpg" in message_content and "media.discordapp.net" in message_content:
+            await message.delete()
+            if guildid == 388227343862464513:
+                ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
+                await ntfcn.send(f"{message.author.mention}的消息中存在可疑链接(疑似图片广告). \n 当前消息快照:```{message.content}```")
+            return True
+        
+        if "media.discordapp.net/attachments" in message_content and ("@everyone" in message.content or "@here" in message.content):
+            await message.delete()
+            if guildid == 388227343862464513:
+                ntfcn = message.guild.get_channel(1162401982649204777) #通知频道-次要-bot命令频道
+                await ntfcn.send(f"{message.author.mention}的消息中存在可疑链接(疑似@everyone+图片广告). \n 当前消息快照:```{message.content}```")
+            return True
         return False
     
     async def VT_file_scan(self, file_path, message: discord.Message):

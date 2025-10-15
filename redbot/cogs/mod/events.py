@@ -442,7 +442,7 @@ class Events(MixinMeta):
 
             # 发送请求到 OpenAI API
             async with aiohttp.ClientSession() as session:
-                async with session.post('https://gptoneapi.1007890.xyz/v1/chat/completions', headers=headers, json=data) as response:
+                async with session.post('https://gptnewapit0.1007890.xyz/v1/chat/completions', headers=headers, json=data) as response:
                     if response.status == 200:
                         result = await response.json()
                         response_text = result['choices'][0]['message']['content'].strip()
@@ -576,24 +576,24 @@ class Events(MixinMeta):
         # log.info(f"user_prompt: {user_prompt}")
         
         for attempt in range(3):
-            modelstr = "deepseek-v3"
+            modelstr = "deepseek-chat"
             if attempt == 2:
-                modelstr = "gpt-4o-mini"
+                modelstr = "gpt-5-mini"
             response = await self.openai_request(modelstr, user_prompt, system_prompt)
             if response is None:
-                log.info(f"gpt请求失败-失败次数{attempt + 1}")
+                log.info(f"ds请求失败-失败次数{attempt + 1}")
                 continue
             try:
                 lowerstr = response.lower()
             except:
-                log.info(f"gpt请求失败-失败次数{attempt + 1}")
+                log.info(f"ds请求失败-失败次数{attempt + 1}")
                 continue
             if not "yes" in lowerstr and not "no" in lowerstr:
-                log.info(f"gpt请求失败-失败次数{attempt + 1}")
+                log.info(f"ds请求失败-失败次数{attempt + 1}")
                 continue
             break
         else:
-            log.info("gpt请求失败")
+            log.info("ds和gpr均请求失败")
             return False
         
         scan_times = await self.config.guild(guild).gpt_scan_msg_count()
@@ -605,32 +605,32 @@ class Events(MixinMeta):
             recheck = "no"
 
             for attempt2 in range(3):
-                response2 = await self.openai_request("mistral-large-latest", user_prompt, system_prompt)
+                response2 = await self.openai_request("gpt-5-mini", user_prompt, system_prompt)
                 if response2 is None:
-                    log.info(f"mistral请求失败-失败次数{attempt2 + 1}")
+                    log.info(f"gpt-5-mini请求失败-失败次数{attempt2 + 1}")
                     continue
                 try:
                     lowerstr2 = response2.lower()
                 except:
-                    log.info(f"mistral请求失败-失败次数{attempt2 + 1}")
+                    log.info(f"gpt-5-mini请求失败-失败次数{attempt2 + 1}")
                     continue
                 if not "yes" in lowerstr2 and not "no" in lowerstr2:
-                    log.info(f"mistral请求失败-失败次数{attempt2 + 1}")
+                    log.info(f"gpt-5-mini请求失败-失败次数{attempt2 + 1}")
                     recheck = "yes"
                     continue
                 else:
                     recheck = lowerstr2
                     break
             else:
-                log.info("mistral请求失败")
+                log.info("gpt-5-mini请求失败")
 
-            log.info(f"mistral检查结果: {lowerstr2}")
+            log.info(f"gpt-5-mini检查结果: {lowerstr2}")
 
             if not "yes" in recheck:
                 await message.channel.send(f"[测试阶段|语义分析] {author.mention} 的消息被归类为广告/诈骗/政治敏感/冒犯/隐私泄露,此结果未通过复核,仅供参考", delete_after=3600)
                 return False
             else:
-                log.info("Mistral检查通过yes")
+                log.info("gpt-5-mini检查通过yes")
             
             block_times = await self.config.guild(guild).gpt_block_msg_count()
             block_times += 1

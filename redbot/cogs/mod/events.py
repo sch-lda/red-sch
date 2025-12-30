@@ -799,7 +799,7 @@ class Events(MixinMeta):
             try:
                 json_result = response.json()
                 # 扫描徽章
-                identity_guild_id = json_result.get("user", {}).get("primary_guild", {}).get("identity_guild_id", 0)
+                identity_guild_id = ((json_result.get("user") or {}).get("primary_guild") or {}).get("identity_guild_id")
                 #if identity_guild_id != 0:
                 #    full_primary_guild = json_result.get("user", {}).get("primary_guild", {})
                 #    log.info(f"[Debug] Bio解析-用户 {userid} 的徽章信息是: {full_primary_guild}")

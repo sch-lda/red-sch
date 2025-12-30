@@ -798,36 +798,39 @@ class Events(MixinMeta):
         if response.status_code == 200:
             try:
                 json_result = response.json()
-                user_profile = json_result.get("user_profile")
+                # 扫描徽章
+                identity_guild_id = json_result.get("user", {}).get("primary_guild", {}).get("identity_guild_id", 0)
+                #if identity_guild_id != 0:
+                #    full_primary_guild = json_result.get("user", {}).get("primary_guild", {})
+                #    log.info(f"[Debug] Bio解析-用户 {userid} 的徽章信息是: {full_primary_guild}")
+                if identity_guild_id == 1006581057543475300:
+                    log.info(f"Bio解析-用户 {userid} 拥有付费菜单徽章,跳过检查")
+                    if guildid == 388227343862464513:
+                        until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=72)
+                        await message.author.edit(timed_out_until=until, reason="[自动]个人主页悬挂Cherax徽章-疑似经销商")
+                        ntfcn = message.guild.get_channel(970972545564168232) #通知频道-仅管理员频道
+                        await ntfcn.send(f"{message.author.mention}的个人主页悬挂付费菜单Cherax徽章，疑似经销商.")
+                        try:
+                            await message.author.send("经过对用户名/个人简介/消息的评估,您被识别为潜在的广告或垃圾账号,已被禁言并通知管理员人工审核,请耐心等待.若24小时内未处理,请主动联系管理员.如果您是付费菜单的经销商,我们默认您不需要在小助手群组中寻求帮助,为防止间接的广告行为,您可以继续浏览消息,但不再能够发送消息或添加反应.若您的业务范围不包含付费辅助或成人内容,通常经过人工审核后将解除禁言.\n等待过程中请勿退出服务器,否则将被永久封禁")
+                        except discord.HTTPException:
+                            pass
+                        await message.delete()
+                        return
+                        
+                user_profile = json_result.get("user_profile", None)
                 if user_profile is None:
                     log.info(f"Bio解析-无法获取 {userid} 的个人资料, user_profile 为 None")
                     return
                     
-                userbio = json_result["user_profile"]["bio"]
-                guildbio = json_result["guild_member"]["bio"]
-                userpronouns = json_result["user_profile"]["pronouns"]
-                guildpronouns = json_result["guild_member_profile"]["pronouns"]
+                userbio = json_result.get("user_profile", {}).get("bio", "").lower()
+                guildbio = json_result.get("guild_member", {}).get("bio", "").lower()
+                userpronouns = json_result.get("user_profile", {}).get("pronouns", "").lower()
+                guildpronouns = json_result.get("guild_member_profile", {}).get("pronouns", "").lower()
                 with open('/home/azureuser/.local/share/Red-DiscordBot/data/sch/cogs/Mod/pf_keywords.json', 'r', encoding='utf-8') as file:
                     data = json.load(file)
                 keywords_to_include = data['keywords_to_include']
-                if guildpronouns:
-                    s_guildpronouns = guildpronouns.lower()
-                else:
-                    s_guildpronouns = ""
-                if userpronouns:
-                    s_userpronouns = userpronouns.lower()
-                else:
-                    s_userpronouns = ""
-                if userbio:
-                    s_userbio = userbio.lower()
-                else:
-                    s_userbio = ""
-                if guildbio:
-                    s_guildbio = guildbio.lower()
-                else:
-                    s_guildbio = ""
 
-                total_pf = "称谓(guild):" + s_guildpronouns + "\n称谓(user):" + s_userpronouns + "\n介绍(user):" + s_userbio + "\n介绍(guild):" + s_guildbio
+                total_pf = "称谓(guild):" + guildpronouns + "\n称谓(user):" + userpronouns + "\n介绍(user):" + userbio + "\n介绍(guild):" + guildbio
 
                 if total_pf:
                     for keyword in keywords_to_include:

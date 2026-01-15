@@ -1402,7 +1402,7 @@ class Events(MixinMeta):
             return
 
         valid_user = isinstance(author, discord.Member) and not author.bot
-        if not valid_user:
+        if not valid_user and message.author.id != 1083210954491318272: # 放行 GTA News 频道
             log.info(f"消息所有者不是member,可能是webhook或外部app\n消息来自: {message.author.mention}\n消息内容: {message.content}")
             if message.reference is not None:
                 try:

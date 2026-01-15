@@ -4763,8 +4763,8 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
 
         prefixes = await ctx.bot.get_valid_prefixes()
         prefix = re.sub(rf"<@!?{ctx.me.id}>", f"@{ctx.me.name}".replace("\\", r"\\"), prefixes[0])
-        description = _("Owner of {}").format(ctx.bot.user)
-        content = _("You can reply to this message with {}contact").format(prefix)
+        description = _("您有一条来自 388227343862464513 频道管理员的消息").format(ctx.bot.user)
+        content = _("使用 &connect 命令回复").format(prefix)
         if await ctx.embed_requested():
             e = discord.Embed(colour=await ctx.embed_colour(), description=message)
 

@@ -164,7 +164,8 @@ class Events(MixinMeta):
         if not message_content:
             if message.attachments:
                 for attachment in message.attachments:
-                    message_content += attachment.url
+                    filename = attachment.filename.lower()
+                    message_content += f" {filename}"
             else:
                 return False
             # Off-topic # 频道公告 # mod-only # 规则

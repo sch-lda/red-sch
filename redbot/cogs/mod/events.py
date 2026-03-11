@@ -162,7 +162,11 @@ class Events(MixinMeta):
             message_content = message.content
 
         if not message_content:
-            return False
+            if message.attachments:
+                for attachment in message.attachments:
+                    message_content += attachment.url
+            else:
+                return False
             # Off-topic # 频道公告 # mod-only # 规则
         if channel.id == 608168595314180106 or channel.id == 970972545564168232 or channel.id == 877000289146798151:
         
@@ -565,6 +569,8 @@ class Events(MixinMeta):
             21. 香港不能说吗 no
             22. 香港的不行吧 no
             23. 差點以為被開盒了 no
+            24. 及时雨稳定不封，最棒了 yes
+            25. 大助手/养老神器/Alice Menu最好 no (这三款均为免费菜单，不属于广告)
 
 
 
@@ -576,8 +582,8 @@ class Events(MixinMeta):
         # log.info(f"user_prompt: {user_prompt}")
         
         for attempt in range(3):
-            modelstr = "deepseek-chat"
-            if attempt == 2:
+            modelstr = "deepseek-v3.2"
+            if attempt >= 2:
                 modelstr = "gpt-5-mini"
             response = await self.openai_request(modelstr, user_prompt, system_prompt)
             if response is None:

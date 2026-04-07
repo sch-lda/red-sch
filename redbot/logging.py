@@ -367,14 +367,14 @@ def init_logging(level: int, location: pathlib.Path, cli_flags: argparse.Namespa
     latest_fhandler = RotatingFileHandler(
         stem="latest",
         directory=location,
-        maxBytes=1_000_000,  # About 1MB per logfile
+        maxBytes=50 * 1024 * 1024,   # 50 MB
         backupCount=MAX_OLD_LOGS,
         encoding="utf-8",
     )
     all_fhandler = RotatingFileHandler(
         stem="red",
         directory=location,
-        maxBytes=1_000_000,
+        maxBytes=50 * 1024 * 1024,   # 50 MB
         backupCount=MAX_OLD_LOGS,
         encoding="utf-8",
     )

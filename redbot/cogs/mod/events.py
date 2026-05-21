@@ -27,10 +27,25 @@ import psutil
 
 RAPIDOCR_IMPORT_ERROR = None
 RAPIDOCR_BACKEND = None
+RAPIDOCR_DEFAULT_PARAMS = None
 
 try:
-    from rapidocr import RapidOCR
+    from rapidocr import EngineType, LangDet, LangRec, ModelType, OCRVersion, RapidOCR
     RAPIDOCR_BACKEND = "rapidocr"
+    RAPIDOCR_DEFAULT_PARAMS = {
+        "Det.engine_type": EngineType.ONNXRUNTIME,
+        "Det.lang_type": LangDet.CH,
+        "Det.model_type": ModelType.MOBILE,
+        "Det.ocr_version": OCRVersion.PPOCRV4,
+        "Rec.engine_type": EngineType.ONNXRUNTIME,
+        "Rec.lang_type": LangRec.CH,
+        "Rec.model_type": ModelType.MOBILE,
+        "Rec.ocr_version": OCRVersion.PPOCRV5,
+        "Cls.engine_type": EngineType.ONNXRUNTIME,
+        "Cls.lang_type": LangDet.CH,
+        "Cls.model_type": ModelType.MOBILE,
+        "Cls.ocr_version": OCRVersion.PPOCRV4,
+    }
 except Exception as exc:
     try:
         from rapidocr_onnxruntime import RapidOCR
@@ -49,7 +64,7 @@ class Events(MixinMeta):
     Has a bunch of things split off to here.
     """
     OCR_MAX_IMAGE_SIZE = 10 * 1024 * 1024
-    OCR_MAX_ATTACHMENTS = 3
+    OCR_MAX_ATTACHMENTS = 9
     OCR_CPU_THRESHOLD = 80.0
     OCR_CPU_RETRY_DELAY = 10
 
@@ -193,7 +208,10 @@ class Events(MixinMeta):
 
         async with self.ocr_lock:
             if self.ocr_engine is None:
-                self.ocr_engine = await asyncio.to_thread(RapidOCR)
+                if RAPIDOCR_DEFAULT_PARAMS is not None:
+                    self.ocr_engine = await asyncio.to_thread(RapidOCR, params=RAPIDOCR_DEFAULT_PARAMS)
+                else:
+                    self.ocr_engine = await asyncio.to_thread(RapidOCR)
         return self.ocr_engine
 
     @staticmethod

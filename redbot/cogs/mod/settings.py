@@ -1,6 +1,8 @@
 import asyncio
 from collections import defaultdict, deque
 from datetime import timedelta
+import io
+import time
 
 import discord
 from redbot.core import commands, i18n
@@ -44,11 +46,29 @@ class ModSettings(MixinMeta):
                 await ctx.send(_("I couldn't fetch the referenced message."))
                 return
 
+        start_time = time.monotonic()
         ocr_text = await self.extract_ocr_text(target_message)
+        elapsed = time.monotonic() - start_time
         if not ocr_text:
-            await ctx.send(_("No OCR text was extracted from the referenced message attachments."))
+            await ctx.send(
+                _("No OCR text was extracted from the referenced message attachments. Took {seconds:.2f}s.").format(
+                    seconds=elapsed
+                )
+            )
             return
 
+        if len(ocr_text) > 1000:
+            buffer = io.BytesIO(ocr_text.encode("utf-8"))
+            file = discord.File(buffer, filename="ocr_result.txt")
+            await ctx.send(
+                _("OCR completed in {seconds:.2f}s. Result is attached as a text file.").format(
+                    seconds=elapsed
+                ),
+                file=file,
+            )
+            return
+
+        await ctx.send(_("OCR completed in {seconds:.2f}s.").format(seconds=elapsed))
         for page in pagify(ocr_text, page_length=1800):
             await ctx.send(page)
 

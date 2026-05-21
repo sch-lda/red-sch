@@ -459,7 +459,7 @@ class Events(MixinMeta):
         except Exception as e:
             return None
 
-    async def openaicheck(self, message):
+    async def llmaudit(self, message):
         guild, author = message.guild, message.author
         isenabled = await self.config.guild(message.guild).aicheck()
         if not isenabled:
@@ -521,17 +521,15 @@ class Events(MixinMeta):
             - yes触发条件: 
             1. 政治敏感话题：包含中国及港澳台的极端负面内容
             2. 危险行为：社工信息(telegram社工机器人、开盒)、加密货币推广
-            3. 广告关联：匹配广告语义库关键词
-                只要讨论或询问标注为P2C菜单名的软件都视为广告
-            4. 拆分规避检测行为
-            5. 钓鱼网站(例如把steamcommunity.com写成steamcomuunity.com的地址)
+            3. 拆分规避检测行为
+            4. 钓鱼网站(例如把steamcommunity.com写成steamcomuunity.com的地址)
             - no触发条件: 
             所有中性/安全内容"""
 
-        user_prompt = f"""
-            当前广告关键词库：
-            {ad_keywords_string}
 
+        #    当前广告关键词库：
+        #    {ad_keywords_string}
+        user_prompt = f"""
             请严格按以下流程执行：
             1. 提取消息核心语义要素
             2. 交叉验证上下文关联性
@@ -545,37 +543,33 @@ class Events(MixinMeta):
             上下文支持材料：
              历史消息数组(分析拆分规避行为)：
             {last_ten_msgs}
-
-            参考示例：
-            1. 厄里斯给词汇崩掉了 yes
-            2. 香港有什么知名旅游景点 no
-            3. GTA赌场豪劫怎么打 no
-            4. 请问哪个付费菜单好用 yes
-            5. erebus怎么用 yes
-            6. 现在增强版什么菜单能用 no
-            7. 现在增强版什么付费菜单能用 yes
-            8. 大助手在哪下载 no
-            9. 现在大助手能用吗 no
-            10. Yim一个免费菜单，到他手里改了点东西，换了个名字，就开始拿去出售了，没点脸 no
-            11. 复制整段内容，打开最新版「夸克APP」即可获取。畅享原画，免费5倍速播放，支持AI字幕和投屏，更有网盘TV版。链接：https://pan.quark.cn/s/* no
-            12. 别玩虚幻5了 来一起探讨菜单 no
-            13. 小助手哪里下载 no
-            14. 大陆现在也注册不了谷歌了 no
-            15. 大佬什么时候discord选几个人来测试一下菜单啊？我这种菜狗写不来驱动，不会内核注入 no
-            16. 极度正确的政治 no
-            17. 议员，给我一分钟。我要说的是，关于荔枝角收押所重建，55亿的预算加上410个床位，每个床位花费50万，这是否合理？ no
-            18. https://github.com/Deadlineem/Chronix 有新菜单？ no
-            19. 没同步吧，内地版的好像被阉割了很多功能 no
-            20. 在玩到Alice Menu前我还不想死号 no
-            21. 香港不能说吗 no
-            22. 香港的不行吧 no
-            23. 差點以為被開盒了 no
-            24. 及时雨稳定不封，最棒了 yes
-            25. 大助手/养老神器/Alice Menu最好 no (这三款均为免费菜单，不属于广告)
-
-
-
             """
+            # 参考示例：
+            # 1. 厄里斯给词汇崩掉了 yes
+            # 2. 香港有什么知名旅游景点 no
+            # 3. GTA赌场豪劫怎么打 no
+            # 4. 请问哪个付费菜单好用 yes
+            # 5. erebus怎么用 yes
+            # 6. 现在增强版什么菜单能用 no
+            # 7. 现在增强版什么付费菜单能用 yes
+            # 8. 大助手在哪下载 no
+            # 9. 现在大助手能用吗 no
+            # 10. Yim一个免费菜单，到他手里改了点东西，换了个名字，就开始拿去出售了，没点脸 no
+            # 11. 复制整段内容，打开最新版「夸克APP」即可获取。畅享原画，免费5倍速播放，支持AI字幕和投屏，更有网盘TV版。链接：https://pan.quark.cn/s/* no
+            # 12. 别玩虚幻5了 来一起探讨菜单 no
+            # 13. 小助手哪里下载 no
+            # 14. 大陆现在也注册不了谷歌了 no
+            # 15. 大佬什么时候discord选几个人来测试一下菜单啊？我这种菜狗写不来驱动，不会内核注入 no
+            # 16. 极度正确的政治 no
+            # 17. 议员，给我一分钟。我要说的是，关于荔枝角收押所重建，55亿的预算加上410个床位，每个床位花费50万，这是否合理？ no
+            # 18. https://github.com/Deadlineem/Chronix 有新菜单？ no
+            # 19. 没同步吧，内地版的好像被阉割了很多功能 no
+            # 20. 在玩到Alice Menu前我还不想死号 no
+            # 21. 香港不能说吗 no
+            # 22. 香港的不行吧 no
+            # 23. 差點以為被開盒了 no
+            # 24. 及时雨稳定不封，最棒了 yes
+            # 25. 大助手/养老神器/Alice Menu最好 no (这三款均为免费菜单，不属于广告)
 
         if len(user_prompt) > 64000:
             user_prompt = user_prompt[:64000]
@@ -583,9 +577,9 @@ class Events(MixinMeta):
         # log.info(f"user_prompt: {user_prompt}")
         
         for attempt in range(3):
-            modelstr = "deepseek-v3.2"
+            modelstr = "deepseek/deepseek-v4-flash"
             if attempt >= 2:
-                modelstr = "gpt-5-mini"
+                modelstr = "gpt-5.4-mini"
             response = await self.openai_request(modelstr, user_prompt, system_prompt)
             if response is None:
                 log.info(f"ds请求失败-失败次数{attempt + 1}")
@@ -600,7 +594,7 @@ class Events(MixinMeta):
                 continue
             break
         else:
-            log.info("ds和gpr均请求失败")
+            log.info("ds和gpt均请求失败")
             return False
         
         scan_times = await self.config.guild(guild).gpt_scan_msg_count()
@@ -612,32 +606,32 @@ class Events(MixinMeta):
             recheck = "no"
 
             for attempt2 in range(3):
-                response2 = await self.openai_request("gpt-5-mini", user_prompt, system_prompt)
+                response2 = await self.openai_request("gpt-5.4-mini", user_prompt, system_prompt)
                 if response2 is None:
-                    log.info(f"gpt-5-mini请求失败-失败次数{attempt2 + 1}")
+                    log.info(f"gpt-5.4-mini请求失败-失败次数{attempt2 + 1}")
                     continue
                 try:
                     lowerstr2 = response2.lower()
                 except:
-                    log.info(f"gpt-5-mini请求失败-失败次数{attempt2 + 1}")
+                    log.info(f"gpt-5.4-mini请求失败-失败次数{attempt2 + 1}")
                     continue
                 if not "yes" in lowerstr2 and not "no" in lowerstr2:
-                    log.info(f"gpt-5-mini请求失败-失败次数{attempt2 + 1}")
+                    log.info(f"gpt-5.4-mini请求失败-失败次数{attempt2 + 1}")
                     recheck = "yes"
                     continue
                 else:
                     recheck = lowerstr2
                     break
             else:
-                log.info("gpt-5-mini请求失败")
+                log.info("gpt-5.4-mini请求失败")
 
-            log.info(f"gpt-5-mini检查结果: {lowerstr2}")
+            log.info(f"gpt-5.4-mini检查结果: {lowerstr2}")
 
             if not "yes" in recheck:
-                await message.channel.send(f"[测试阶段|语义分析] {author.mention} 的消息被归类为广告/诈骗/政治敏感/冒犯/隐私泄露,此结果未通过复核,仅供参考", delete_after=3600)
+                await message.channel.send(f"[测试阶段|语义分析] {author.mention} 的消息被归类为广告/诈骗/政治敏感/人身攻击,此结果未通过复核,仅供参考", delete_after=3600)
                 return False
             else:
-                log.info("gpt-5-mini检查通过yes")
+                log.info("gpt-5.4-mini检查通过yes")
             
             block_times = await self.config.guild(guild).gpt_block_msg_count()
             block_times += 1
@@ -662,10 +656,10 @@ class Events(MixinMeta):
                     messagecontent = message_content
                     if len(messagecontent) > 900:
                         messagecontent = messagecontent[:900]
-                    await message.channel.send(f"[测试阶段|语义分析] {author.mention} 的消息被归类为广告/诈骗/政治敏感/冒犯/隐私泄露,已被禁言{mute_time}分钟.\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n原始消息已私发给您.管理员可使用&toggleaicheck关闭消息实时分析", delete_after=3600)
-                    log.info(f" {author} 的消息被识别为潜在的广告或诈骗消息\n本次禁言时间:{mute_time}分\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n原始消息内容:{messagecontent}")
+                    await message.channel.send(f"[测试阶段|语义分析] {author.mention} 的消息被归类为广告/诈骗/政治敏感/人身攻击,已被禁言{mute_time}分钟.\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n原始消息已私发给您.管理员可使用&toggleaicheck关闭消息实时分析", delete_after=3600)
+                    log.info(f" {author} 的消息被识别为潜在的恶意消息\n本次禁言时间:{mute_time}分\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n原始消息内容:{messagecontent}")
                     try:
-                        await author.send(f"您的消息被识别为潜在的广告或诈骗消息\n本次禁言时间:{mute_time}分\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n您的原始消息内容:```{messagecontent}```\n服务器:{guild.name}\n频道:{channel.name}")
+                        await author.send(f"您的消息被识别为潜在的恶意消息\n本次禁言时间:{mute_time}分\n下次触发过滤禁言时间将调整为:{next_mute_time}分\n您的原始消息内容:```{messagecontent}```\n服务器:{guild.name}\n频道:{channel.name}")
                     except discord.HTTPException:
                         pass
             return True
@@ -1261,16 +1255,13 @@ class Events(MixinMeta):
             message_content = ref_msg.content
         else:
             message_content = message.content
-
-        if message.channel.id == 1254956902308122664: #bypass 进群验证
-            return
         
         content = message_content
         urlpattern = r"(https?://\S+)"
         urls = re.findall(urlpattern, content)
         for url in urls:
-            if url.startswith("https://t.me/GTA5OnlineToolsPornVideo/"):
-                continue
+            #if url.startswith("https://t.me/GTA5OnlineToolsPornVideo/"):
+            #    continue
             domainpre = tldextract.extract(url).domain
             suffix = tldextract.extract(url).suffix
             domain = domainpre + "." + suffix
@@ -1389,7 +1380,7 @@ class Events(MixinMeta):
                     await self.affcodecheck(message)
                     await self.urlsafecheck(message)
                     await self.filesafecheck(message)
-                    await self.openaicheck(message)
+                    await self.llmaudit(message)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -1400,7 +1391,7 @@ class Events(MixinMeta):
         if await self.bot.cog_disabled_in_guild(self, message.guild):
             return
         
-        if message.channel.id == 970972545564168232: #绕过mod-only
+        if message.channel.id == 970972545564168232 or message.channel.id == 1254956902308122664: #绕过mod-only 和进群验证频道
             return
 
         deleted = await self.shadowfunc(message)
@@ -1445,7 +1436,7 @@ class Events(MixinMeta):
                             await self.urlsafecheck(message)
                             await self.filesafecheck(message)
                             await self.autorole(message)
-                            await self.openaicheck(message)
+                            await self.llmaudit(message)
 
     @staticmethod
     def _update_past_names(name: str, name_list: List[Optional[str]]) -> None:

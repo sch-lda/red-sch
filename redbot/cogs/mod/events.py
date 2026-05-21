@@ -23,6 +23,7 @@ import multiprocessing
 import time
 import threading
 import aiohttp
+import psutil
 
 RAPIDOCR_IMPORT_ERROR = None
 RAPIDOCR_BACKEND = None
@@ -49,6 +50,8 @@ class Events(MixinMeta):
     """
     OCR_MAX_IMAGE_SIZE = 10 * 1024 * 1024
     OCR_MAX_ATTACHMENTS = 3
+    OCR_CPU_THRESHOLD = 80.0
+    OCR_CPU_RETRY_DELAY = 10
 
     @staticmethod
     def _describe_cv2_import() -> str:
@@ -61,6 +64,27 @@ class Events(MixinMeta):
             return f"cv2 spec origin={origin} locations={locations[:3]}"
         except Exception as exc:
             return f"cv2 spec lookup failed: {type(exc).__name__}: {exc}"
+
+    async def _should_skip_ocr_for_cpu(self, message_id: int) -> bool:
+        for attempt in range(2):
+            cpu_percent = await asyncio.to_thread(psutil.cpu_percent, 0.5)
+            if cpu_percent <= self.OCR_CPU_THRESHOLD:
+                return False
+
+            if attempt == 0:
+                log.info(
+                    f"OCR delayed for message {message_id}: cpu usage {cpu_percent:.1f}% "
+                    f"exceeds threshold {self.OCR_CPU_THRESHOLD:.1f}%"
+                )
+                await asyncio.sleep(self.OCR_CPU_RETRY_DELAY)
+            else:
+                log.info(
+                    f"OCR skipped for message {message_id}: cpu usage {cpu_percent:.1f}% "
+                    f"still exceeds threshold {self.OCR_CPU_THRESHOLD:.1f}%"
+                )
+                return True
+
+        return False
 
     async def repeattosoftban(self, guild, author, channel, member, reason):
         guild = guild
@@ -212,6 +236,9 @@ class Events(MixinMeta):
             return ""
 
         if RapidOCR is None:
+            return ""
+
+        if await self._should_skip_ocr_for_cpu(message.id):
             return ""
 
         if message.flags.value == 16384:

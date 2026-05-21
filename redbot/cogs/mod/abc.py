@@ -19,6 +19,9 @@ class MixinMeta(ABC):
         self.cache: dict
         self.cache_mod: dict
         self.cache_aicheck: dict
+        self.ocr_engine = None
+        self.ocr_lock = None
+        self.ocr_unavailable_logged = False
 
     @staticmethod
     @abstractmethod

@@ -1,6 +1,8 @@
 import datetime
+import importlib.util
 import json
 import logging
+import sys
 from collections import defaultdict, deque
 from typing import List, Optional
 from redbot.core.utils.mod import get_audit_reason
@@ -22,6 +24,20 @@ import time
 import threading
 import aiohttp
 
+RAPIDOCR_IMPORT_ERROR = None
+RAPIDOCR_BACKEND = None
+
+try:
+    from rapidocr import RapidOCR
+    RAPIDOCR_BACKEND = "rapidocr"
+except Exception as exc:
+    try:
+        from rapidocr_onnxruntime import RapidOCR
+        RAPIDOCR_BACKEND = "rapidocr_onnxruntime"
+    except Exception:
+        RapidOCR = None
+        RAPIDOCR_IMPORT_ERROR = exc
+
 _ = i18n.Translator("Mod", __file__)
 log = logging.getLogger("red.mod")
 
@@ -31,6 +47,21 @@ class Events(MixinMeta):
     This is a mixin for the core mod cog
     Has a bunch of things split off to here.
     """
+    OCR_MAX_IMAGE_SIZE = 10 * 1024 * 1024
+    OCR_MAX_ATTACHMENTS = 3
+
+    @staticmethod
+    def _describe_cv2_import() -> str:
+        try:
+            cv2_spec = importlib.util.find_spec("cv2")
+            if cv2_spec is None:
+                return "cv2 spec not found"
+            origin = cv2_spec.origin
+            locations = list(cv2_spec.submodule_search_locations or [])
+            return f"cv2 spec origin={origin} locations={locations[:3]}"
+        except Exception as exc:
+            return f"cv2 spec lookup failed: {type(exc).__name__}: {exc}"
+
     async def repeattosoftban(self, guild, author, channel, member, reason):
         guild = guild
         author = author
@@ -106,15 +137,126 @@ class Events(MixinMeta):
                 channel=None,
             )
 
-    def isonlycontainsemoji(self, content):
+    def isonlycontainsemoji(self, message):
+        content = message.content
         emoji_pattern = r'<:.*?:\d+>'
         traditional_emoji_pattern = re.compile(r'[\U0001F600-\U0001F64F]')
         traditional_emoji = re.findall(traditional_emoji_pattern, content)
         emojis = re.findall(emoji_pattern, content)
         all_emojis = traditional_emoji + emojis
+
+        # 额外判断是否有附件，如果有附件，则不认为是仅包含表情
+        if message.attachments:
+            return False
         if len(all_emojis) == len(content):
             return True
         return False
+
+    async def _get_or_create_ocr_engine(self):
+        if RapidOCR is None:
+            if not self.ocr_unavailable_logged:
+                log.warning(
+                    "rapidocr import failed, image OCR audit is disabled. "
+                    f"python={sys.executable} version={sys.version.split()[0]} "
+                    f"error={type(RAPIDOCR_IMPORT_ERROR).__name__ if RAPIDOCR_IMPORT_ERROR else 'Unknown'}: "
+                    f"{RAPIDOCR_IMPORT_ERROR}"
+                )
+                log.warning(f"rapidocr import sys.path preview: {sys.path[:5]}")
+                self.ocr_unavailable_logged = True
+            return None
+        if self.ocr_engine is not None:
+            return self.ocr_engine
+
+        async with self.ocr_lock:
+            if self.ocr_engine is None:
+                self.ocr_engine = await asyncio.to_thread(RapidOCR)
+        return self.ocr_engine
+
+    @staticmethod
+    def _extract_ocr_texts(result) -> List[str]:
+        if result is None:
+            return []
+
+        txts = getattr(result, "txts", None)
+        if txts:
+            return [text.strip() for text in txts if isinstance(text, str) and text.strip()]
+
+        if isinstance(result, tuple):
+            texts = []
+            for item in result:
+                if isinstance(item, (list, tuple)):
+                    for entry in item:
+                        if (
+                            isinstance(entry, (list, tuple))
+                            and len(entry) >= 2
+                            and isinstance(entry[1], str)
+                            and entry[1].strip()
+                        ):
+                            texts.append(entry[1].strip())
+                elif isinstance(item, str) and item.strip():
+                    texts.append(item.strip())
+            return texts
+
+        return []
+
+    def _run_ocr_sync(self, image_bytes: bytes) -> List[str]:
+        if self.ocr_engine is None:
+            return []
+
+        result = self.ocr_engine(image_bytes)
+        return self._extract_ocr_texts(result)
+
+    async def extract_ocr_text(self, message: discord.Message) -> str:
+        isenabled = await self.config.guild(message.guild).ocrimagecheck()
+        if not isenabled:
+            return ""
+
+        if RapidOCR is None:
+            return ""
+
+        if message.flags.value == 16384:
+            ref_msg = await self.fetch_forwards(message)
+            if ref_msg is None:
+                return ""
+            scan_message = ref_msg
+        else:
+            scan_message = message
+
+        image_attachments = []
+        for attachment in scan_message.attachments:
+            content_type = attachment.content_type or ""
+            filename = attachment.filename.lower()
+            if not (
+                content_type.startswith("image/")
+                or filename.endswith((".png", ".jpg", ".jpeg", ".webp", ".bmp"))
+            ):
+                continue
+            if attachment.size and attachment.size > self.OCR_MAX_IMAGE_SIZE:
+                continue
+            image_attachments.append(attachment)
+            if len(image_attachments) >= self.OCR_MAX_ATTACHMENTS:
+                break
+
+        if not image_attachments:
+            return ""
+
+        engine = await self._get_or_create_ocr_engine()
+        if engine is None:
+            return ""
+
+        extracted_texts = []
+        for attachment in image_attachments:
+            try:
+                image_bytes = await attachment.read(use_cached=True)
+                if not image_bytes:
+                    continue
+                ocr_lines = await asyncio.to_thread(self._run_ocr_sync, image_bytes)
+                if ocr_lines:
+                    extracted_texts.append("\n".join(ocr_lines))
+            except Exception as exc:
+                log.info(f"OCR failed for attachment {attachment.filename}: {exc}")
+
+        return "\n\n".join(text for text in extracted_texts if text).strip()
     
     async def fetch_forwards(self, message):
         reference = message.reference
@@ -459,6 +601,40 @@ class Events(MixinMeta):
         except Exception as e:
             return None
 
+    async def request_llm_decision_with_retry(
+        self,
+        user_prompt: str,
+        system_prompt: str,
+        *,
+        log_prefix: str,
+        max_attempts: int = 5,
+        fallback_model: str = "gpt-5.4-mini",
+    ) -> Optional[str]:
+        for attempt in range(max_attempts):
+            attempt_num = attempt + 1
+            modelstr = "deepseek/deepseek-v4-flash"
+            if attempt_num >= 4:
+                modelstr = fallback_model
+
+            response = await self.openai_request(modelstr, user_prompt, system_prompt)
+            if response is None:
+                log.info(f"{log_prefix}请求失败-失败次数{attempt_num}, model={modelstr}")
+            else:
+                try:
+                    lowerstr = response.lower()
+                except Exception:
+                    log.info(f"{log_prefix}响应解析失败-失败次数{attempt_num}, model={modelstr}")
+                else:
+                    if "yes" in lowerstr or "no" in lowerstr:
+                        return lowerstr
+                    log.info(f"{log_prefix}响应格式异常-失败次数{attempt_num}, model={modelstr}")
+
+            if attempt_num < max_attempts:
+                backoff_seconds = min(2 ** attempt, 16)
+                await asyncio.sleep(backoff_seconds)
+
+        return None
+
     async def llmaudit(self, message):
         guild, author = message.guild, message.author
         isenabled = await self.config.guild(message.guild).aicheck()
@@ -469,7 +645,7 @@ class Events(MixinMeta):
         #     return
         if message.channel.id == 608951880403517470:
             return
-        if self.isonlycontainsemoji(message.content):
+        if self.isonlycontainsemoji(message):
             return
 
         if message.flags.value == 16384: # 是否是转发消息
@@ -479,6 +655,12 @@ class Events(MixinMeta):
             message_content = ref_msg.content
         else:
             message_content = message.content
+
+        ocr_text = await self.extract_ocr_text(message)
+        log.info(f"OCR结果: {ocr_text}")
+        message_content_for_audit = message_content
+        if ocr_text:
+            message_content_for_audit = f"{message_content}\n\n[image_ocr]\n{ocr_text}".strip()
         
         channel = message.channel
         if channel.id == 703228036157538364:
@@ -505,7 +687,7 @@ class Events(MixinMeta):
                 return True
             guild_cache = self.cache_aicheck[guild.id] = defaultdict(lambda: deque(maxlen=10))
         
-        guild_cache[author].append(message_content)
+        guild_cache[author].append(message_content_for_audit)
 
         last_ten_msgs = list(guild_cache[author])
         
@@ -538,7 +720,7 @@ class Events(MixinMeta):
             注意，聊天消息来自侠盗猎车手游戏交流群，可能包含“抢劫”等游戏内暴力内容，不应触发风险判定。
             
             待分析消息：
-            {message_content}
+            {message_content_for_audit}
 
             上下文支持材料：
              历史消息数组(分析拆分规避行为)：
@@ -576,54 +758,33 @@ class Events(MixinMeta):
 
         # log.info(f"user_prompt: {user_prompt}")
         
-        for attempt in range(3):
-            modelstr = "deepseek/deepseek-v4-flash"
-            if attempt >= 2:
-                modelstr = "gpt-5.4-mini"
-            response = await self.openai_request(modelstr, user_prompt, system_prompt)
-            if response is None:
-                log.info(f"ds请求失败-失败次数{attempt + 1}")
-                continue
-            try:
-                lowerstr = response.lower()
-            except:
-                log.info(f"ds请求失败-失败次数{attempt + 1}")
-                continue
-            if not "yes" in lowerstr and not "no" in lowerstr:
-                log.info(f"ds请求失败-失败次数{attempt + 1}")
-                continue
-            break
-        else:
-            log.info("ds和gpt均请求失败")
+        lowerstr = await self.request_llm_decision_with_retry(
+            user_prompt,
+            system_prompt,
+            log_prefix="llm初审",
+        )
+        if lowerstr is None:
+            log.info("llm初审多次重试后仍未得到有效结果")
             return False
         
         scan_times = await self.config.guild(guild).gpt_scan_msg_count()
         scan_times += 1
         await self.config.guild(guild).gpt_scan_msg_count.set(scan_times)
 
-        if "yes" in response.lower():
-            attempt2 = 0
+        if "yes" in lowerstr:
             recheck = "no"
 
-            for attempt2 in range(3):
-                response2 = await self.openai_request("gpt-5.4-mini", user_prompt, system_prompt)
-                if response2 is None:
-                    log.info(f"gpt-5.4-mini请求失败-失败次数{attempt2 + 1}")
-                    continue
-                try:
-                    lowerstr2 = response2.lower()
-                except:
-                    log.info(f"gpt-5.4-mini请求失败-失败次数{attempt2 + 1}")
-                    continue
-                if not "yes" in lowerstr2 and not "no" in lowerstr2:
-                    log.info(f"gpt-5.4-mini请求失败-失败次数{attempt2 + 1}")
-                    recheck = "yes"
-                    continue
-                else:
-                    recheck = lowerstr2
-                    break
+            lowerstr2 = await self.request_llm_decision_with_retry(
+                user_prompt,
+                system_prompt,
+                log_prefix="llm复审",
+                fallback_model="gpt-5.4-mini",
+            )
+            if lowerstr2 is None:
+                log.info("llm复审多次重试后仍未得到有效结果")
+                lowerstr2 = "yes"
             else:
-                log.info("gpt-5.4-mini请求失败")
+                recheck = lowerstr2
 
             log.info(f"gpt-5.4-mini检查结果: {lowerstr2}")
 

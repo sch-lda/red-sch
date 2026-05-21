@@ -2,9 +2,10 @@ import asyncio
 from collections import defaultdict, deque
 from datetime import timedelta
 
+import discord
 from redbot.core import commands, i18n
 from redbot.core.utils import AsyncIter
-from redbot.core.utils.chat_formatting import box, humanize_timedelta, inline
+from redbot.core.utils.chat_formatting import box, humanize_timedelta, inline, pagify
 
 from .abc import MixinMeta
 
@@ -20,6 +21,36 @@ class ModSettings(MixinMeta):
     @commands.guildowner_or_permissions(administrator=True)
     async def modset(self, ctx: commands.Context):
         """Manage server administration settings."""
+
+    @commands.command(name="ocr_test")
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def ocr_test(self, ctx: commands.Context):
+        """Run OCR on the referenced message's image attachments."""
+        reference = ctx.message.reference
+        if reference is None or reference.message_id is None:
+            await ctx.send(_("Please reply to a message with image attachments and run this command again."))
+            return
+
+        target_channel = ctx.channel
+        if reference.channel_id is not None:
+            target_channel = self.bot.get_channel(reference.channel_id) or ctx.channel
+
+        target_message = reference.resolved if isinstance(reference.resolved, discord.Message) else None
+        if target_message is None:
+            try:
+                target_message = await target_channel.fetch_message(reference.message_id)
+            except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+                await ctx.send(_("I couldn't fetch the referenced message."))
+                return
+
+        ocr_text = await self.extract_ocr_text(target_message)
+        if not ocr_text:
+            await ctx.send(_("No OCR text was extracted from the referenced message attachments."))
+            return
+
+        for page in pagify(ocr_text, page_length=1800):
+            await ctx.send(page)
 
     @modset.command(name="showsettings")
     async def modset_showsettings(self, ctx: commands.Context):
@@ -660,6 +691,7 @@ class ModSettings(MixinMeta):
         await self.config.guild(guild).pfcheck.set(True)
         await self.config.guild(guild).markdowncheck.set(True)
         await self.config.guild(guild).qrcodecheck.set(True)
+        await self.config.guild(guild).ocrimagecheck.set(True)
         await self.config.guild(guild).badmentioncheck.set(True)
         await self.config.guild(guild).urlblacklistcheck.set(True)
         await self.config.guild(guild).shadowmutecheck.set(True)
@@ -718,6 +750,22 @@ class ModSettings(MixinMeta):
         else:
             await self.config.guild(guild).qrcodecheck.set(False)
             await ctx.send(_("QR Code check has been disabled."))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.admin_or_permissions(manage_guild=True)
+    async def toggleocrimagecheck(self, ctx: commands.Context):
+        """Toggle OCR image text audit.
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.config.guild(guild).ocrimagecheck()
+        if not toggled:
+            await self.config.guild(guild).ocrimagecheck.set(True)
+            await ctx.send(_("OCR image text audit has been enabled."))
+        else:
+            await self.config.guild(guild).ocrimagecheck.set(False)
+            await ctx.send(_("OCR image text audit has been disabled."))
 
     @commands.command()
     @commands.guild_only()

@@ -68,6 +68,7 @@ class Mod(
         "pfcheck":True,
         "markdowncheck":True,
         "qrcodecheck":True,
+        "ocrimagecheck":True,
         "badmentioncheck":True,
         "urlblacklistcheck":True,
         "shadowmutecheck":True,
@@ -105,6 +106,9 @@ class Mod(
         self.last_case: dict = defaultdict(dict)
         self.mthread1 = None
         self.mthread2 = None
+        self.ocr_engine = None
+        self.ocr_lock = asyncio.Lock()
+        self.ocr_unavailable_logged = False
 
     async def red_delete_data_for_user(
         self,

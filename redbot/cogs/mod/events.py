@@ -742,14 +742,12 @@ class Events(MixinMeta):
             Objective: 基于语义检测消息是否符合预设风险条件
             Capability: 
             - 上下文综合分析能力
-            - 消息拆分反审查识别能力
             Output:
             - 严格仅输出小写英文 yes/no
             - yes触发条件: 
-            1. 政治敏感话题：包含中国及港澳台的极端负面内容
+            1. 政治敏感话题：包含中国及港澳台的负面内容，或将少数群体的不良行为上升至整个群体（中国人、亚东）的讨论
             2. 危险行为：社工信息(telegram社工机器人、开盒)、加密货币推广
-            3. 拆分规避检测行为
-            4. 钓鱼网站(例如把steamcommunity.com写成steamcomuunity.com的地址)
+            3. 钓鱼网站(例如把steamcommunity.com写成steamcomuunity.com的地址)
             - no触发条件: 
             所有中性/安全内容"""
 
@@ -768,7 +766,7 @@ class Events(MixinMeta):
             {message_content_for_audit}
 
             上下文支持材料：
-             历史消息数组(分析拆分规避行为)：
+             历史消息数组(上下文感知)：
             {last_ten_msgs}
             """
             # 参考示例：

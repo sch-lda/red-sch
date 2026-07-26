@@ -10,7 +10,7 @@ from typing import Tuple
 
 import aiohttp
 import discord
-import redbot_update
+import redbot._update as redbot_update
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 from redbot.core import data_manager

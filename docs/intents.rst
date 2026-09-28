@@ -82,8 +82,8 @@ out your application:
 Intents
 -------
 
-Red expects **all intents** to be active. It is possible, but not recommended, to disable
-specific intents using the ``--disable-intent`` flag. If an intent is missing, you may
+Red requests all intents except Guild Presences. It is possible, but not recommended, to disable
+additional intents using the ``--disable-intent`` flag. If a required intent is missing, you may
 experience errors due to Red expecting information provided by the intent to be present.
 
 Discord currently considers 3 intents to be
@@ -91,7 +91,8 @@ Discord currently considers 3 intents to be
 and requires large bots to additionally apply for access to these intents. **If you have a small
 bot**, you can simply follow :ref:`these instructions <enabling-privileged-intents>` to enable them.
 
-A breakdown of how privileged intents are used in Red is provided below.
+A breakdown of how privileged intents are used in Red is provided below. Red requires the
+Message Content and Guild Members intents. It does not request Guild Presences.
 
 The **Message Content** intent is required to use text based commands and inputs for
 configuration and all built in functionality. App commands (also known as slash commands)
@@ -115,5 +116,5 @@ to reference the member cache in order to avoid making API requests, and are not
 up to check if the intent is present before doing so.
 
 The **Guild Presences** intent is required to view the activities and status of
-users. Cogs which perform actions on users based on their activity or status will
-be unable to access this information if this intent is not enabled.
+users. Red does not request this intent. Presence-dependent commands such as
+``[p]serverinfo`` and ``[p]usrinfo`` report that member presence data is unavailable.

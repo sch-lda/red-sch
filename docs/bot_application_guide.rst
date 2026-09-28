@@ -63,7 +63,7 @@ Continue to the next section to enable privileged intents.
 Enabling Privileged Intents
 -------------------------------
 .. warning::
-    :ref:`Red Bot requires all intents. <intents>`
+    :ref:`Red Bot requires the Guild Members and Message Content intents. <intents>`
     \This section is required.
 
 1. Make sure you're logged on to the `Discord website <https://discord.com>`_.
@@ -74,7 +74,7 @@ Enabling Privileged Intents
     .. image:: /.resources/bot-guide/discord_bot_tab.png
         :alt: The bot tab in the application overview page.
 
-5. Scroll down to the "Privileged Gateway Intents" section, enable all three privileged intents and save your changes.
+5. Scroll down to the "Privileged Gateway Intents" section, enable the Server Members and Message Content intents, then save your changes. Red does not request the Presence intent.
 
     .. image:: /.resources/bot-guide/discord_privileged_intents.png
         :alt: The privileged gateway intents selector.

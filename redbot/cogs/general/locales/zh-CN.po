@@ -223,6 +223,10 @@ msgstr ""
 msgid "Created on {date_and_time}. That's {relative_time}!"
 msgstr ""
 
+#: redbot/cogs/general/general.py
+msgid "Member presence information is unavailable because this bot does not request the Guild Presences intent."
+msgstr "当前机器人未请求 Guild Presences（成员状态）Intent，无法读取成员在线状态和活动。"
+
 #: redbot/cogs/general/general.py:276
 msgid "Users online"
 msgstr ""
@@ -388,4 +392,3 @@ msgid "<{permalink}>\n"
 "{description}\n\n"
 "{thumbs_down} Down / {thumbs_up} Up, Powered by Urban Dictionary."
 msgstr ""
-

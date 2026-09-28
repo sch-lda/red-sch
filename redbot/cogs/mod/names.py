@@ -181,6 +181,15 @@ class ModInfo(MixinMeta):
         If the member has no roles, previous usernames, global display names, or server nicknames,
         these fields will be omitted.
         """
+        if not ctx.bot.intents.presences:
+            await ctx.send(
+                _(
+                    "Member presence information is unavailable because this bot does not "
+                    "request the Guild Presences intent."
+                )
+            )
+            return
+
         author = ctx.author
         guild = ctx.guild
 

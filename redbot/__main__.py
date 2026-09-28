@@ -361,7 +361,7 @@ async def run_bot(red: Red, cli_flags: Namespace) -> None:
     except discord.PrivilegedIntentsRequired:
         console = rich.get_console()
         console.print(
-            "Red requires all Privileged Intents to be enabled.\n"
+            "Red requires the Guild Members and Message Content privileged intents to be enabled.\n"
             "You can find out how to enable Privileged Intents with this guide:\n"
             "https://docs.discord.red/en/stable/bot_application_guide.html#enabling-privileged-intents",
             style="red",

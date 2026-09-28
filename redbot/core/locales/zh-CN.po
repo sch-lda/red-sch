@@ -2530,6 +2530,10 @@ msgstr ""
 msgid "Status changed to {}."
 msgstr "状态已更改为 {}"
 
+#: redbot/core/core_commands.py
+msgid "This command needs the Guild Presences intent to read and preserve the bot's current status or activity."
+msgstr "此命令需要 Guild Presences Intent 才能读取并保留机器人当前状态或活动。"
+
 #: redbot/core/core_commands.py:3345
 #, docstring
 msgid "Set [botname]'s status to online."
@@ -4772,4 +4776,3 @@ msgstr ""
 #: redbot/core/tree.py:373
 msgid "You are not permitted to use commands because of an allowlist or blocklist."
 msgstr ""
-

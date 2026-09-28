@@ -258,6 +258,15 @@ class General(commands.Cog):
         `details`: Shows more information when set to `True`.
         Default to False.
         """
+        if not ctx.bot.intents.presences:
+            await ctx.send(
+                _(
+                    "Member presence information is unavailable because this bot does not "
+                    "request the Guild Presences intent."
+                )
+            )
+            return
+
         guild = ctx.guild
         created_at = _("Created on {date_and_time}. That's {relative_time}!").format(
             date_and_time=discord.utils.format_dt(guild.created_at),

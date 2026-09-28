@@ -223,11 +223,15 @@ class Red(
         if "owner_id" in kwargs:
             raise RuntimeError("Red doesn't accept owner_id kwarg, use owner_ids instead.")
 
-        if "intents" not in kwargs:
+        if kwargs.get("intents") is None:
             intents = discord.Intents.all()
             for intent_name in cli_flags.disable_intent:
                 setattr(intents, intent_name, False)
             kwargs["intents"] = intents
+
+        # Red excludes member presence updates by default. Commands that need
+        # presence data check this flag before trying to use it.
+        kwargs["intents"].presences = False
 
         self._owner_id_overwrite = cli_flags.owner
 

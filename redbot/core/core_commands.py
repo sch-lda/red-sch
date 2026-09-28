@@ -3124,6 +3124,17 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
     # -- End Bot Metadata Commands -- ###
     # -- Bot Status Commands -- ###
 
+    async def _require_presence_intent(self, ctx: commands.Context) -> bool:
+        if ctx.bot.intents.presences:
+            return True
+        await ctx.send(
+            _(
+                "This command needs the Guild Presences intent to read and preserve the bot's "
+                "current status or activity."
+            )
+        )
+        return False
+
     @_set.group(name="status")
     @commands.bot_in_a_guild()
     @commands.is_owner()
@@ -3159,6 +3170,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         **Arguments:**
         - `<streamer>` - The twitch streamer to provide a link to. This can be their twitch name or the entire URL.
         - `<stream_title>` - The text to follow `Streaming` in the status."""
+        if not await self._require_presence_intent(ctx):
+            return
+
         status = ctx.bot.guilds[0].me.status if len(ctx.bot.guilds) > 0 else None
 
         if stream_title:
@@ -3194,6 +3208,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         - `[game]` - The text to follow `Playing`. Leave blank to clear the current activity status.
         """
 
+        if not await self._require_presence_intent(ctx):
+            return
+
         if game:
             game = discord.Game(name=game)
         else:
@@ -3224,6 +3241,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         **Arguments:**
         - `[listening]` - The text to follow `Listening to`. Leave blank to clear the current activity status.
         """
+
+        if not await self._require_presence_intent(ctx):
+            return
 
         status = ctx.bot.guilds[0].me.status if len(ctx.bot.guilds) > 0 else discord.Status.online
         if listening:
@@ -3258,6 +3278,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         - `[watching]` - The text to follow `Watching`. Leave blank to clear the current activity status.
         """
 
+        if not await self._require_presence_intent(ctx):
+            return
+
         status = ctx.bot.guilds[0].me.status if len(ctx.bot.guilds) > 0 else discord.Status.online
         if watching:
             activity = discord.Activity(name=watching, type=discord.ActivityType.watching)
@@ -3288,6 +3311,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         **Arguments:**
         - `[competing]` - The text to follow `Competing in`. Leave blank to clear the current activity status.
         """
+
+        if not await self._require_presence_intent(ctx):
+            return
 
         status = ctx.bot.guilds[0].me.status if len(ctx.bot.guilds) > 0 else discord.Status.online
         if competing:
@@ -3322,6 +3348,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
         - `[text]` - The custom status text. Leave blank to clear the current activity status.
         """
 
+        if not await self._require_presence_intent(ctx):
+            return
+
         status = ctx.bot.guilds[0].me.status if len(ctx.bot.guilds) > 0 else discord.Status.online
         if text:
             activity = discord.CustomActivity(name=text)
@@ -3334,6 +3363,9 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             await ctx.send(_("Custom status cleared."))
 
     async def _set_my_status(self, ctx: commands.Context, status: discord.Status):
+        if not await self._require_presence_intent(ctx):
+            return
+
         game = ctx.bot.guilds[0].me.activity if len(ctx.bot.guilds) > 0 else None
         await ctx.bot.change_presence(status=status, activity=game)
         return await ctx.send(_("Status changed to {}.").format(status))

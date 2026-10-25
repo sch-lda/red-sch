@@ -287,6 +287,15 @@ _FILE_FORMATTER = logging.Formatter(
 )
 
 
+class _DeprecationWarningFilter(logging.Filter):
+    """Keep plugin warning-filter overrides from flooding ordinary runtime logs."""
+
+    _category = re.compile(r":\d+: (?:Pending)?DeprecationWarning:")
+
+    def filter(self, record: LogRecord) -> bool:
+        return self._category.search(record.getMessage()) is None
+
+
 def init_logging(
     level: int,
     *,
@@ -353,6 +362,12 @@ def init_logging(
 
     root_logger.addHandler(stdout_handler)
     logging.captureWarnings(True)
+    warning_logger = logging.getLogger("py.warnings")
+    for warning_filter in list(warning_logger.filters):
+        if isinstance(warning_filter, _DeprecationWarningFilter):
+            warning_logger.removeFilter(warning_filter)
+    if level > logging.DEBUG:
+        warning_logger.addFilter(_DeprecationWarningFilter())
 
     if location is not None:
         init_file_logging(location)
@@ -388,14 +403,14 @@ def init_file_logging(location: pathlib.Path) -> None:
     latest_fhandler = RotatingFileHandler(
         stem="latest",
         directory=location,
-        maxBytes=50 * 1024 * 1024,   # 50 MB
+        maxBytes=50 * 1024 * 1024,  # 50 MB
         backupCount=MAX_OLD_LOGS,
         encoding="utf-8",
     )
     all_fhandler = RotatingFileHandler(
         stem="red",
         directory=location,
-        maxBytes=50 * 1024 * 1024,   # 50 MB
+        maxBytes=50 * 1024 * 1024,  # 50 MB
         backupCount=MAX_OLD_LOGS,
         encoding="utf-8",
     )

@@ -329,48 +329,10 @@ _VERSION = "3.5.25.dev1"
 
 __version__, version_info = VersionInfo._get_version()
 
-# Show DeprecationWarning
-_warnings.filterwarnings("default", category=DeprecationWarning)
-
-# TODO: Rearrange cli flags here and use the value instead of this monkeypatch
-if not any(_re.match("^-(-debug|d+|-verbose|v+)$", i) for i in _sys.argv):
-    # DEP-WARN
-    # Individual warnings - tracked in https://github.com/Cog-Creators/Red-DiscordBot/issues/3529
-    # DeprecationWarning: an integer is required (got type float).  Implicit conversion to integers using __int__ is deprecated, and may be removed in a future version of Python.
-    _warnings.filterwarnings("ignore", category=DeprecationWarning, module="importlib", lineno=219)
-    # DeprecationWarning: The loop argument is deprecated since Python 3.8, and scheduled for removal in Python 3.10
-    #   stdin, stdout, stderr = await tasks.gather(stdin, stdout, stderr,
-    # this is a bug in CPython
+# Deprecated APIs are actionable when debugging, not during normal bot operation.
+# Keep other warning categories (including RuntimeWarning and UserWarning) visible.
+_debug_warnings = any(_re.match("^-(-debug|d+|-verbose|v+)$", i) for i in _sys.argv)
+for _warning_category in (DeprecationWarning, PendingDeprecationWarning):
     _warnings.filterwarnings(
-        "ignore",
-        category=DeprecationWarning,
-        module="asyncio",
-        message="The loop argument is deprecated since Python 3.8",
-    )
-    # discord.py, aiohttp-json-rpc and uvloop still call this deprecated API.
-    # uvloop can attribute the warning to our executor call sites, so match
-    # the exact message rather than the reporting module. Keep it in debug mode.
-    _warnings.filterwarnings(
-        "ignore",
-        category=DeprecationWarning,
-        message=r"'asyncio\.iscoroutinefunction' is deprecated and slated for removal",
-    )
-    # DEP-WARN - d.py currently uses audioop module, Danny is aware of the deprecation
-    #
-    # DeprecationWarning: 'audioop' is deprecated and slated for removal in Python 3.13
-    #   import audioop
-    _warnings.filterwarnings(
-        "ignore",
-        category=DeprecationWarning,
-        module="discord",
-        message="'audioop' is deprecated and slated for removal",
-    )
-    # DEP-WARN - will need a fix before Python 3.12 support
-    #
-    # DeprecationWarning: the load_module() method is deprecated and slated for removal in Python 3.12; use exec_module() instead
-    _warnings.filterwarnings(
-        "ignore",
-        category=DeprecationWarning,
-        module="importlib",
-        message=r"the load_module\(\) method is deprecated and slated for removal",
+        "default" if _debug_warnings else "ignore", category=_warning_category
     )

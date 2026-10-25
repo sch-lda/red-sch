@@ -1,52 +1,26 @@
-import os
-import re
-import shutil
+"""Generate platform/Python-aware locks with uv (run from the repository root)."""
 import subprocess
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).parents[3].absolute()
+REQUIREMENTS = ROOT / "requirements"
 
-EXCLUDE_STEM_RE = re.compile(r".*-3\.(?!8-)(\d+)-extra-(doc|style)")
-GITHUB_OUTPUT = os.environ["GITHUB_OUTPUT"]
-REQUIREMENTS_FOLDER = Path(__file__).parents[3].absolute() / "requirements"
-os.chdir(REQUIREMENTS_FOLDER)
-
-
-def pip_compile(version: str, name: str) -> None:
-    stem = f"{sys.platform}-{version}-{name}"
-    if EXCLUDE_STEM_RE.fullmatch(stem):
-        return
-
-    constraint_flags = [
-        arg
-        for file in REQUIREMENTS_FOLDER.glob(f"{sys.platform}-3.8-*.txt")
-        for arg in ("-c", file.name)
-    ]
-
-    executable = ("py", f"-{version}") if sys.platform == "win32" else (f"python{version}",)
+for source in [REQUIREMENTS / "base.in", *sorted(REQUIREMENTS.glob("extra-*.in"))]:
     subprocess.check_call(
-        (
-            *executable,
-            "-m",
-            "piptools",
+        [
+            "uv",
+            "pip",
             "compile",
-            "--upgrade",
-            "--resolver=backtracking",
-            "--verbose",
-            f"{name}.in",
+            str(source.relative_to(ROOT)),
+            "--python-version",
+            "3.8.1",
+            "--universal",
+            "--no-python-downloads",
             "--output-file",
-            f"{stem}.txt",
-            *constraint_flags,
-        )
+            str(source.with_suffix(".txt").relative_to(ROOT)),
+            "--no-header",
+            *sys.argv[1:],
+        ],
+        cwd=ROOT,
     )
-
-
-for minor in range(8, 11 + 1):
-    version = f"3.{minor}"
-    pip_compile(version, "base")
-    shutil.copyfile(f"{sys.platform}-{version}-base.txt", "base.txt")
-    for file in REQUIREMENTS_FOLDER.glob("extra-*.in"):
-        pip_compile(version, file.stem)
-
-with open(GITHUB_OUTPUT, "a", encoding="utf-8") as fp:
-    fp.write(f"sys_platform={sys.platform}\n")

@@ -38,7 +38,6 @@ from typing import (
 
 import aiohttp
 import discord
-from packaging.version import Version
 from redbot.core.data_manager import storage_type
 
 from . import (
@@ -54,7 +53,6 @@ from . import (
 )
 from ._diagnoser import IssueDiagnoser
 from .utils import AsyncIter, can_user_send_messages_in
-from .utils._internal_utils import fetch_latest_red_version
 from .utils.predicates import MessagePredicate
 from .utils.chat_formatting import (
     box,
@@ -422,15 +420,6 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             owner = app_info.owner
         custom_info = await self.bot._config.custom_info()
 
-        try:
-            latest = await fetch_latest_red_version()
-        except (aiohttp.ClientError, TimeoutError) as exc:
-            log.error("Failed to fetch latest version information from PyPI.", exc_info=exc)
-            pypi_version = None
-        else:
-            pypi_version = latest.version
-        outdated = pypi_version and pypi_version > Version(__version__)
-
         if embed_links:
             dpy_version = "[{}]({})".format(discord.__version__, dpy_repo)
             python_version = "[{}.{}.{}]({})".format(*sys.version_info[:3], python_url)
@@ -453,14 +442,6 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             embed.add_field(name="Python", value=python_version)
             embed.add_field(name="discord.py", value=dpy_version)
             embed.add_field(name=_("Red version"), value=red_version)
-            if outdated in (True, None):
-                if outdated is True:
-                    outdated_value = _("Yes, {version} is available.").format(
-                        version=str(pypi_version)
-                    )
-                else:
-                    outdated_value = _("Checking for updates failed.")
-                embed.add_field(name=_("Outdated"), value=outdated_value)
             if custom_info:
                 embed.add_field(name=_("About this instance"), value=custom_info, inline=False)
             embed.add_field(name=_("About Red"), value=about, inline=False)
@@ -508,15 +489,6 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
                     dpy_version=dpy_version,
                     red_version=red_version,
                 )
-
-            if outdated in (True, None):
-                if outdated is True:
-                    outdated_value = _("Yes, {version} is available.").format(
-                        version=str(pypi_version)
-                    )
-                else:
-                    outdated_value = _("Checking for updates failed.")
-                extras += _("Outdated:          [{state}]\n").format(state=outdated_value)
 
             red = (
                 _("**About Red**\n")

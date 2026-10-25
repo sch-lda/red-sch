@@ -1,4 +1,5 @@
-aiohttp<3.10
+aiohttp<3.10; python_version < "3.12"
+aiohttp>=3.13,<4; python_version >= "3.12"
 aiohttp-json-rpc
 apsw
 babel
@@ -9,15 +10,12 @@ packaging
 platformdirs
 psutil
 python-dateutil
-python-discovery
 PyYAML
 rapidfuzz
 Red-Commons
 Red-Lavalink
-redbot-update
 rich
 schema
-textual
 typing_extensions
 yarl
 distro; sys_platform == "linux"
@@ -25,6 +23,6 @@ distro; sys_platform == "linux"
 uvloop; sys_platform != "win32" and platform_python_implementation == "CPython"
 
 # Used by discord.py[speedup]. See Pull request #6587 for more info.
-Brotli
+Brotli>=1.2.1
 orjson
 zstandard

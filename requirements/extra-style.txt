@@ -1,8 +1,28 @@
 black==23.12.1
-    # via -r extra-style.in
+    # via -r requirements/extra-style.in
+click==8.1.8
+    # via
+    #   -c requirements/base.txt
+    #   black
+colorama==0.4.6 ; sys_platform == 'win32'
+    # via
+    #   -c requirements/base.txt
+    #   click
 mypy-extensions==1.1.0
     # via black
+packaging==26.0
+    # via
+    #   -c requirements/base.txt
+    #   black
 pathspec==0.12.1
     # via black
-tomli==2.4.0
+platformdirs==4.3.6
+    # via
+    #   -c requirements/base.txt
+    #   black
+tomli==2.4.0 ; python_full_version < '3.11'
     # via black
+typing-extensions==4.13.2 ; python_full_version < '3.11'
+    # via
+    #   -c requirements/base.txt
+    #   black

@@ -1,2 +1,8 @@
-asyncpg==0.30.0
-    # via -r extra-postgres.in
+async-timeout==4.0.3 ; python_full_version < '3.11'
+    # via
+    #   -c requirements/base.txt
+    #   asyncpg
+asyncpg==0.30.0 ; python_full_version < '3.9'
+    # via -r requirements/extra-postgres.in
+asyncpg==0.32.0 ; python_full_version >= '3.9'
+    # via -r requirements/extra-postgres.in

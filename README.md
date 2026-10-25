@@ -90,6 +90,16 @@ community of cog repositories.**
 
 # Installation
 
+This fork can run on Python 3.14. Install the fork itself (`python -m pip install .`),
+not the upstream PyPI release, whose Python version limit may differ. The companion
+slim Docker image supplies the extra moderation and OCR dependencies. Python 3.15
+is still excluded. This fork does not include the upstream self-updater or
+check PyPI for newer Red releases.
+
+Dependency locks include Python/platform markers. Regenerate them from the repository
+root with `python .github/workflows/scripts/compile_requirements.py` (requires `uv`);
+add `--upgrade` to refresh pinned versions.
+
 **The following platforms are officially supported:** 
 
 - [Windows](https://docs.discord.red/en/stable/install_guides/windows.html)

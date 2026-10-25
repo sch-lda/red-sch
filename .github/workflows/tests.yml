@@ -105,3 +105,18 @@ jobs:
             if [[ $error_count -gt 0 ]]; then
               exit 1
             fi
+
+    python314-smoke:
+      name: Python 3.14 - Offline startup
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        - uses: actions/setup-python@v5
+          with:
+            python-version: '3.14'
+        - name: Install ZBar
+          run: sudo apt-get update && sudo apt-get install -y libzbar0
+        - name: Install bot
+          run: python -m pip install -e . requests Pillow pyzbar tldextract
+        - name: Check startup and bundled cogs without Discord login
+          run: python tools/smoke_python314.py

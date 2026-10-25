@@ -1,18 +1,11 @@
 import asyncio
 import contextlib
-import platform
-import shlex
 import sys
 import logging
 import traceback
 from datetime import datetime, timedelta, timezone
-from typing import Tuple
 
-import aiohttp
 import discord
-import redbot._update as redbot_update
-from packaging.specifiers import SpecifierSet
-from packaging.version import Version
 from redbot.core import data_manager
 
 from redbot.core.bot import ExitCodes
@@ -27,8 +20,6 @@ from ._config import get_latest_confs
 from .utils._internal_utils import (
     fuzzy_command_search,
     format_fuzzy_results,
-    fetch_latest_red_version,
-    send_to_owners_with_prefix_replaced,
 )
 from .utils.chat_formatting import inline, format_perms_list
 
@@ -53,37 +44,6 @@ ______         _           ______ _                       _  ______       _
 _ = Translator(__name__, __file__)
 
 
-def get_outdated_red_messages(pypi_version: str) -> Tuple[str, str]:
-    outdated_red_message = _(
-        "Your Red instance is out of date! {} is the current version, however you are using {}!"
-    ).format(pypi_version, red_version)
-    rich_outdated_message = (
-        f"[red]Outdated version![/red]\n"
-        f"[red]!!![/red]Version [cyan]{pypi_version}[/] is available, "
-        f"but you're using [cyan]{red_version}[/][red]!!![/red]"
-    )
-    extra_update = _(
-        "\n\nWhile the following command should work in most scenarios as it is "
-        "based on your current OS, environment, and Python version, "
-        "**we highly recommend you to read the update docs at <{docs}> and "
-        "make sure there is nothing else that "
-        "needs to be done during the update.**"
-    ).format(docs="https://docs.discord.red/en/stable/update_red.html")
-
-    redbot_update_bin = redbot_update.find_redbot_update_bin()
-    is_windows = platform.system() == "Windows"
-    update_command = f'"{redbot_update_bin}"' if is_windows else shlex.quote(redbot_update_bin)
-    extra_update += _(
-        "\n\nTo update your bot, first shutdown your bot"
-        " then open a window of {console} (Not as admin) and run the following: {command}"
-    ).format(
-        console=_("Command Prompt") if is_windows else _("Terminal"),
-        command=f"```{update_command}```",
-    )
-    outdated_red_message += extra_update
-    return outdated_red_message, rich_outdated_message
-
-
 def init_events(bot, cli_flags):
     @bot.event
     async def on_connect():
@@ -95,7 +55,6 @@ def init_events(bot, cli_flags):
         try:
             await _on_ready()
 
-
         except Exception as exc:
             log.critical("The bot failed to get ready!", exc_info=exc)
             sys.exit(ExitCodes.CRITICAL)
@@ -103,9 +62,11 @@ def init_events(bot, cli_flags):
     async def _on_ready():
         if bot._uptime is not None:
             return
-        
+
         try:
-            await bot.get_guild(388227343862464513).get_channel(1162401982649204777).send("Bot重新启动成功")
+            await bot.get_guild(388227343862464513).get_channel(1162401982649204777).send(
+                "Bot重新启动成功"
+            )
         except:
             pass
 
@@ -134,16 +95,6 @@ def init_events(bot, cli_flags):
         if bot.intents.members:  # Lets avoid 0 Unique Users
             table_counts.add_row("Unique Users", str(users))
 
-        fetch_version_task = asyncio.create_task(fetch_latest_red_version())
-        log.info("Fetching information about latest Red version...")
-        try:
-            await asyncio.wait_for(asyncio.shield(fetch_version_task), timeout=5)
-        except asyncio.TimeoutError:
-            log.info("Version information will continue to be fetched in the background...")
-        except Exception:
-            # these will be logged later
-            pass
-
         rich_console = rich.get_console()
         rich_console.print(INTRO, style="red", markup=False, highlight=False)
         if guilds:
@@ -170,21 +121,6 @@ def init_events(bot, cli_flags):
             )
 
         bot._red_ready.set()
-
-        try:
-            latest = await fetch_version_task
-        except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
-            log.error("Failed to fetch latest version information from PyPI.", exc_info=exc)
-        except (KeyError, ValueError) as exc:
-            log.error("Failed to parse version metadata received from PyPI.", exc_info=exc)
-        else:
-            outdated = latest.version > Version(red_version)
-            if outdated:
-                outdated_red_message, rich_outdated_message = get_outdated_red_messages(
-                    latest.version
-                )
-                rich_console.print(rich_outdated_message)
-                await send_to_owners_with_prefix_replaced(bot, outdated_red_message)
 
     @bot.event
     async def on_command_completion(ctx: commands.Context):

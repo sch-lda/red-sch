@@ -70,7 +70,7 @@ def init_events(bot, cli_flags):
         except:
             pass
 
-        bot._uptime = datetime.utcnow()
+        bot._uptime = datetime.now(timezone.utc).replace(tzinfo=None)
 
         guilds = len(bot.guilds)
         users = len(set([m for m in bot.get_all_members()]))

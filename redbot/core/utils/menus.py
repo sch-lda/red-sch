@@ -3,6 +3,7 @@
 #
 # Ported to Red V3 by Palm\_\_ (https://github.com/palmtree5)
 import asyncio
+import inspect
 import contextlib
 import functools
 from types import MappingProxyType
@@ -203,7 +204,7 @@ async def menu(
         maybe_coro = value
         if isinstance(value, functools.partial):
             maybe_coro = value.func
-        if not asyncio.iscoroutinefunction(maybe_coro):
+        if not inspect.iscoroutinefunction(maybe_coro):
             raise RuntimeError("Function must be a coroutine")
 
     if await ctx.bot.use_buttons() and message is None:

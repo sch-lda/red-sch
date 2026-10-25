@@ -12,7 +12,7 @@ import shutil
 import tarfile
 import time
 import warnings
-from datetime import datetime
+from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 from tarfile import TarInfo
@@ -250,7 +250,7 @@ async def create_backup(dest: Path = Path.home()) -> Optional[Path]:
         return None
 
     dest.mkdir(parents=True, exist_ok=True)
-    timestr = datetime.utcnow().strftime("%Y-%m-%dT%H-%M-%S")
+    timestr = datetime.now(timezone.utc).replace(tzinfo=None).strftime("%Y-%m-%dT%H-%M-%S")
     backup_fpath = dest / f"redv3_{data_manager.instance_name()}_{timestr}.tar.gz"
 
     to_backup = []

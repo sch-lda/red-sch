@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Tuple, List
 from collections import namedtuple
 
@@ -103,7 +103,13 @@ class AntiSpam:
 
     def __interval_check(self, interval: _AntiSpamInterval):
         return (
-            len([t for t in self.__event_timestamps if (t + interval.period) > datetime.utcnow()])
+            len(
+                [
+                    t
+                    for t in self.__event_timestamps
+                    if (t + interval.period) > datetime.now(timezone.utc).replace(tzinfo=None)
+                ]
+            )
             >= interval.frequency
         )
 
@@ -123,7 +129,9 @@ class AntiSpam:
         The stamp will last until the corresponding interval duration
         has expired (set when this AntiSpam object was initiated).
         """
-        self.__event_timestamps.append(datetime.utcnow())
+        self.__event_timestamps.append(datetime.now(timezone.utc).replace(tzinfo=None))
         self.__event_timestamps = [
-            t for t in self.__event_timestamps if t + self.__discard_after > datetime.utcnow()
+            t
+            for t in self.__event_timestamps
+            if t + self.__discard_after > datetime.now(timezone.utc).replace(tzinfo=None)
         ]

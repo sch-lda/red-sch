@@ -347,6 +347,14 @@ if not any(_re.match("^-(-debug|d+|-verbose|v+)$", i) for i in _sys.argv):
         module="asyncio",
         message="The loop argument is deprecated since Python 3.8",
     )
+    # discord.py, aiohttp-json-rpc and uvloop still call this deprecated API.
+    # uvloop can attribute the warning to our executor call sites, so match
+    # the exact message rather than the reporting module. Keep it in debug mode.
+    _warnings.filterwarnings(
+        "ignore",
+        category=DeprecationWarning,
+        message=r"'asyncio\.iscoroutinefunction' is deprecated and slated for removal",
+    )
     # DEP-WARN - d.py currently uses audioop module, Danny is aware of the deprecation
     #
     # DeprecationWarning: 'audioop' is deprecated and slated for removal in Python 3.13

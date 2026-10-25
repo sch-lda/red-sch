@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 from datetime import datetime, timezone
 from typing import Union, List, Optional, TYPE_CHECKING, Literal
@@ -1042,7 +1043,7 @@ def cost(amount: int):
 
     def deco(coro_or_command):
         is_command = isinstance(coro_or_command, commands.Command)
-        if not is_command and not asyncio.iscoroutinefunction(coro_or_command):
+        if not is_command and not inspect.iscoroutinefunction(coro_or_command):
             raise TypeError("@bank.cost() can only be used on commands or `async def` functions")
 
         coro = coro_or_command.callback if is_command else coro_or_command

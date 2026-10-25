@@ -1,5 +1,6 @@
 from __future__ import annotations
 import asyncio
+import inspect
 import json
 import logging
 from asyncio import as_completed, Semaphore
@@ -90,11 +91,11 @@ class AsyncFilter(AsyncIterator[_T], Awaitable[List[_T]]):  # pylint: disable=du
 
         # We assign the generator strategy based on the arguments' types
         if isinstance(iterable, AsyncIterable):
-            if asyncio.iscoroutinefunction(func):
+            if inspect.iscoroutinefunction(func):
                 self.__generator_instance = self.__async_generator_async_pred()
             else:
                 self.__generator_instance = self.__async_generator_sync_pred()
-        elif asyncio.iscoroutinefunction(func):
+        elif inspect.iscoroutinefunction(func):
             self.__generator_instance = self.__sync_generator_async_pred()
         else:
             raise TypeError("Must be either an async predicate, an async iterable, or both.")
